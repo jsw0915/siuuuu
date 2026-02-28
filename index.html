@@ -3,224 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIUUUU! ARCHIVE D-DAY EDITION</title>
+    <title>SIUUUU! ULTIMATE ARCHIVE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; --grad: linear-gradient(135deg, #ff4d6d 0%, #9b5de5 100%); }
+        body { background: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         
-        :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; }
-
-        body { 
-            background-color: var(--bg); color: var(--text); 
-            margin: 0; font-family: 'Pretendard', sans-serif; 
-            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-x: hidden; -webkit-tap-highlight-color: transparent;
-        }
-
-        /* 공통 가로 스크롤 */
-        .scroll-container {
-            display: flex; overflow-x: auto; overflow-y: hidden;
-            gap: 12px; -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; -ms-overflow-style: none;
-        }
+        /* 헤더 & 카테고리 */
+        .header { position: sticky; top: 0; z-index: 2000; background: rgba(253, 251, 247, 0.8); backdrop-filter: blur(15px); padding: 15px 0; }
+        .scroll-container { display: flex; overflow-x: auto; gap: 12px; padding: 5px 20px; scrollbar-width: none; }
         .scroll-container::-webkit-scrollbar { display: none; }
+        .tag-btn { flex: 0 0 auto; padding: 10px 24px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.3s; color: #78716c; }
+        .tag-btn.active { background: var(--main); color: white; transform: scale(1.05); border-color: transparent; box-shadow: 0 5px 15px rgba(234, 179, 8, 0.3); }
 
-        .category-wrapper { position: sticky; top: 0; z-index: 2000; padding: 15px 0; background: inherit; width: 100%; }
+        /* 카드 UI */
+        .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.04); position: relative; animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .swiper { width: 100%; height: auto; background: #f1f5f9; }
+        .swiper-slide img { width: 100%; display: block; aspect-ratio: 1/1; object-fit: cover; }
+        
+        /* 캘린더 */
+        .cal-day { height: 85px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.02); cursor: pointer; background: white; }
+        .day-label { font-size: 9px; padding: 4px; border-radius: 6px; color: white; display: block; margin-top: 3px; font-weight: bold; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .d-day-badge { background: #000; color: #fff; padding: 2px 5px; border-radius: 5px; font-size: 9px; font-weight: 900; margin-left: 5px; }
 
-        .tag-btn { 
-            flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; 
-            background: white; border: 2px solid rgba(0,0,0,0.05);
-            font-size: 14px; font-weight: 800; cursor: pointer;
-            transition: all 0.3s; color: #78716c;
-        }
-        .tag-btn.active { transform: scale(1.05); color: white !important; }
-
-        /* 피드 카드 & 다중 이미지 슬라이더 */
-        .post-card { 
-            background: white; border-radius: 35px; border: 1px solid rgba(0,0,0,0.03);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden;
-            margin: 0 15px 30px; animation: fadeIn 0.6s ease-out; position: relative;
-        }
-        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; }
-        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
-
-        /* 캘린더 & D-Day */
-        .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.02); cursor: pointer; }
-        .day-label { font-size: 9px; padding: 4px; border-radius: 6px; color: white; display: block; margin-top: 3px; font-weight: bold; text-align: center; }
-        .d-day-badge { font-size: 9px; background: #000; color: #fff; padding: 2px 4px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
-
-        .hashtag { font-weight: 900; padding: 2px 6px; border-radius: 8px; background: rgba(0,0,0,0.03); margin: 0 2px; }
-        .input-area { background: white; padding: 25px; border-radius: 35px; margin: 20px 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-        textarea { width: 100%; border: none; background: #f8fafc; border-radius: 20px; padding: 20px; font-size: 16px; outline: none; resize: none; box-sizing: border-box; }
+        /* 입력창 & 모달 */
+        .input-box { background: white; padding: 25px; border-radius: 35px; margin: 20px 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        textarea { width: 100%; border: none; background: #f8fafc; border-radius: 20px; padding: 18px; font-size: 15px; outline: none; resize: none; box-sizing: border-box; }
+        #editModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; backdrop-filter: blur(10px); align-items: center; justify-content: center; }
+        .modal-content { width: 85%; max-width: 400px; background: white; padding: 30px; border-radius: 35px; }
     </style>
 </head>
 <body>
 
 <div id="gate" style="display: flex; position: fixed; inset: 0; z-index: 9999; background: #fdfbf7; flex-direction: column; align-items: center; justify-content: center;">
     <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic; margin: 0;">SIUUUU!</h1>
-    <div style="width: 300px; margin-top: 30px;">
-        <input id="userName" type="text" placeholder="이름을 입력하세요" style="width: 100%; padding: 20px; border-radius: 20px; border: 2px solid #eee; text-align: center; font-size: 18px; outline: none; margin-bottom: 15px; box-sizing: border-box;">
-        <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 20px; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">SQUAD IN</button>
+    <div style="width: 280px; margin-top: 30px;">
+        <input id="userName" type="text" placeholder="스쿼드 멤버 이름" style="width: 100%; padding: 18px; border-radius: 20px; border: 2px solid #eee; text-align: center; font-size: 16px; outline: none; margin-bottom: 12px; box-sizing: border-box;">
+        <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 18px; border-radius: 20px; font-weight: 900; border: none; cursor: pointer; font-size: 16px;">SQUAD IN</button>
     </div>
 </div>
 
-<div id="app" style="display: none; max-width: 600px; margin: 0 auto; padding-bottom: 100px;">
-    <header style="padding: 40px 25px 20px; display: flex; justify-content: space-between; align-items: center;">
-        <h1 id="mainTitle" style="font-size: 2.5rem; font-weight: 900; font-style: italic; margin: 0;">SIUUUU! 🔥</h1>
-        <button onclick="handleLogout()" style="opacity: 0.4; border: 1px solid #ccc; padding: 8px 15px; border-radius: 12px; background: none; cursor: pointer; font-weight: bold;">EXIT</button>
+<div id="app" style="display: none; max-width: 600px; margin: 0 auto; padding-bottom: 50px;">
+    <header style="padding: 30px 25px 10px; display: flex; justify-content: space-between; align-items: center;">
+        <h1 id="mainTitle" style="font-size: 2.2rem; font-weight: 900; font-style: italic; margin: 0; color: #eab308;">SIUUUU! 🔥</h1>
+        <button onclick="handleLogout()" style="opacity: 0.3; border: 1px solid #ccc; padding: 6px 12px; border-radius: 10px; background: none; font-size: 11px; font-weight: bold;">EXIT</button>
     </header>
 
     <div class="post-card" style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 id="calMonth" style="margin: 0; font-weight: 900; font-size: 1.5rem;"></h2>
-            <div style="display: flex; gap: 20px; color: #eab308; font-weight: 900; cursor: pointer;">
+            <h2 id="calMonth" style="margin: 0; font-weight: 900; font-size: 1.3rem;"></h2>
+            <div style="display: flex; gap: 15px; color: #eab308; font-weight: 900; cursor: pointer;">
                 <span onclick="moveMonth(-1)">◀</span> <span onclick="moveMonth(1)">▶</span>
             </div>
         </div>
-        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10px;">
             <thead style="color: #94a3b8;"><tr><th>SUN</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th></tr></thead>
             <tbody id="calBody"></tbody>
         </table>
-        <div id="dateEditor" style="display:none; margin-top: 20px; padding: 15px; background: #fdfbf7; border-radius: 20px; border: 1px solid #eee;">
-            <p id="selectedDateText" style="font-size: 13px; font-weight: 900; color: #eab308;"></p>
+        <div id="dateEditor" style="display:none; margin-top: 15px; padding: 15px; background: #fdfbf7; border-radius: 20px; border: 1px solid #eee;">
+            <p id="selectedDateText" style="font-size: 13px; font-weight: 900; color: #eab308; margin: 0 0 10px;"></p>
             <div id="existingEvents"></div>
-            <div style="display: flex; gap: 8px; margin-top: 15px;">
-                <input id="dateInput" type="text" placeholder="오늘의 기록" style="flex:1; padding: 12px; border: 1px solid #eee; border-radius: 12px;">
-                <button onclick="saveDateEvent()" style="background: #eab308; color:white; border:none; padding: 10px 20px; border-radius: 12px; font-weight: 900;">GO</button>
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <input id="dateInput" type="text" placeholder="새 일정 입력" style="flex:1; padding: 10px; border: 1px solid #eee; border-radius: 10px; font-size: 13px; outline: none;">
+                <button onclick="saveDateEvent()" style="background: #eab308; color:white; border:none; padding: 0 15px; border-radius: 10px; font-weight: 900;">추가</button>
             </div>
         </div>
     </div>
 
-    <div class="category-wrapper">
-        <div class="scroll-container" id="categoryScroll" style="padding: 5px 20px;">
-            <button onclick="changeTheme('all', this)" class="tag-btn active" data-color="#eab308" data-bg="#fdfbf7">#전체</button>
-            <button onclick="changeTheme('추억', this)" class="tag-btn" data-color="#38bdf8" data-bg="#f0f9ff">#추억🧸</button>
-            <button onclick="changeTheme('생일', this)" class="tag-btn" data-color="#fb7185" data-bg="#fff1f2">#생일🎂</button>
-            <button onclick="changeTheme('태지아', this)" class="tag-btn" data-color="#ff4d6d" data-bg="#fff0f3">#태지아</button>
-            <button onclick="changeTheme('조성우', this)" class="tag-btn" data-color="#007bff" data-bg="#f0f7ff">#조성우</button>
-            <button onclick="changeTheme('염태성', this)" class="tag-btn" data-color="#20c997" data-bg="#f0fffb">#염태성</button>
-            <button onclick="changeTheme('김태현', this)" class="tag-btn" data-color="#9b5de5" data-bg="#f8f4ff">#김태현</button>
-            <button onclick="changeTheme('이준서', this)" class="tag-btn" data-color="#f15bb5" data-bg="#fff0f9">#이준서</button>
-            <button onclick="changeTheme('이지호', this)" class="tag-btn" data-color="#d4a373" data-bg="#fdf8f3">#이지호</button>
-            <button onclick="changeTheme('이다원', this)" class="tag-btn" data-color="#7b2cbf" data-bg="#f5f0ff">#이다원</button>
+    <div class="header">
+        <div class="scroll-container" id="categoryBar">
+            <button class="tag-btn active" data-color="#eab308" onclick="changeTheme('all', this)">#전체</button>
         </div>
     </div>
 
-    <div class="input-area">
-        <textarea id="pContent" placeholder="여기에 우리들의 기록을..."></textarea>
-        <div style="display: flex; gap: 12px; margin-top: 15px;">
+    <div class="input-box">
+        <textarea id="pContent" rows="3" placeholder="오늘 우리의 소중한 조각을 남겨주세요..."></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
             <input type="file" id="pFile" style="display: none;" multiple onchange="updateFileStatus(this)">
-            <label for="pFile" id="fLab" style="flex: 1; text-align: center; padding: 18px; background: #f8fafc; border-radius: 20px; font-weight: 800; border: 2px dashed #e2e8f0; color: #94a3b8; cursor: pointer; font-size: 14px;">사진 추가 (여러 장 가능)</label>
-            <button onclick="savePost()" id="sBtn" style="flex: 1.2; background: #eab308; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">기억 저장</button>
+            <label for="pFile" id="fLab" style="flex: 1; text-align: center; padding: 15px; background: #f8fafc; border-radius: 15px; font-size: 12px; font-weight: 800; border: 2px dashed #eee; color: #94a3b8; cursor: pointer;">📸 사진 추가</label>
+            <button onclick="savePost()" id="sBtn" style="flex: 1; background: #eab308; color: white; border-radius: 15px; font-weight: 900; border: none; cursor: pointer;">저장하기</button>
         </div>
     </div>
 
     <div id="feed"></div>
 </div>
 
+<div id="editModal">
+    <div class="modal-content">
+        <h3 style="margin: 0 0 15px; font-weight: 900;">📝 게시물 수정</h3>
+        <textarea id="editContent" rows="5"></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="submitEdit()" id="updateBtn" style="flex: 2; background: var(--main); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 900; cursor: pointer;">수정 완료</button>
+            <button onclick="closeEdit()" style="flex: 1; background: #eee; border: none; border-radius: 15px; font-weight: 900; cursor: pointer;">취소</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const SQUAD_COLORS = {
-        '태지아': '#ff4d6d', '조성우': '#007bff', '염태성': '#20c997', 
-        '김태현': '#9b5de5', '이준서': '#f15bb5', '이지호': '#d4a373', '이다원': '#7b2cbf',
-        '추억': '#38bdf8', '생일': '#fb7185'
-    };
-    const SQUAD = Object.keys(SQUAD_COLORS);
+    const SQUAD_COLORS = { '태지아': '#ff4d6d', '조성우': '#007bff', '염태성': '#20c997', '김태현': '#9b5de5', '이준서': '#f15bb5', '이지호': '#d4a373', '이다원': '#7b2cbf', '추억': '#38bdf8', '생일': '#fb7185' };
     const SB_URL = 'https://chlqufwjiwfiqzvmocof.supabase.co';
     const SB_KEY = 'sb_publishable_MyGDUC1VPEyrWP6THcgWEA_mk8HUpQj'; 
-    let client;
-    let viewDate = new Date();
-    let selDate = "";
-    let allSchedules = [];
+    let client, viewDate = new Date(), selDate = "", currentEditId = null;
 
-    window.onload = function() {
+    window.onload = () => {
         client = supabase.createClient(SB_URL, SB_KEY);
+        const bar = document.getElementById("categoryBar");
+        Object.keys(SQUAD_COLORS).forEach(name => {
+            if(name === '추억' || name === '생일') return;
+            const btn = document.createElement("button");
+            btn.className = "tag-btn"; btn.innerText = "#" + name; btn.setAttribute("data-color", SQUAD_COLORS[name]);
+            btn.onclick = e => changeTheme(name, e.target);
+            bar.appendChild(btn);
+        });
         if (localStorage.getItem('siu_user')) showApp();
     };
 
     function handleLogin() {
         const n = document.getElementById('userName').value.trim();
-        if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); }
-        else { alert("스쿼드 멤버 이름을 입력하세요!"); }
+        if (SQUAD_COLORS[n]) { localStorage.setItem('siu_user', n); showApp(); }
+        else { alert("정확한 멤버 이름을 입력하세요!"); }
     }
-
-    function showApp() {
-        document.getElementById('gate').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        renderCalendar(); loadFeed();
-    }
-
+    function showApp() { document.getElementById('gate').style.display = 'none'; document.getElementById('app').style.display = 'block'; renderCalendar(); loadFeed(); }
     function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
 
-    // ✨ D-Day 계산 엔진
-    function getDDay(targetDate) {
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const target = new Date(targetDate);
-        target.setHours(0,0,0,0);
-        
-        const diff = target - today;
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-        
-        if (days === 0) return "D-Day";
-        if (days > 0) return `D-${days}`;
-        return `D+${Math.abs(days)}`;
+    // D-Day 엔진
+    function getDDay(target) {
+        const t = new Date(target); t.setHours(0,0,0,0);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const diff = Math.ceil((t - today) / (1000 * 60 * 60 * 24));
+        return diff === 0 ? "D-Day" : (diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`);
     }
 
-    function updateFileStatus(input) {
-        const count = input.files.length;
-        document.getElementById('fLab').innerText = count > 0 ? `📸 사진 ${count}장 선택됨` : "사진 추가 (여러 장 가능)";
-    }
-
-    function highlightHashtags(text) {
-        return text.replace(/#([ㄱ-ㅎㅏ-ㅣ가-힣a-zA-Z0-9]+)/g, (match, tag) => {
-            const color = SQUAD_COLORS[tag] || '#94a3b8';
-            return `<span class="hashtag" style="color: ${color}; border-bottom: 2px solid ${color}33;">#${tag}</span>`;
-        });
+    async function loadFeed(filter = 'all') {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '<p style="text-align:center; padding:50px; opacity:0.3;">RECALLING MEMORIES...</p>';
+        let { data } = await client.from('posts').select('*').order('created_at', { ascending: false });
+        if(filter !== 'all') data = data.filter(p => p.user_name === filter);
+        
+        feed.innerHTML = data.map(p => {
+            const isMine = p.user_name === localStorage.getItem('siu_user');
+            const urls = p.image_url ? p.image_url.split(',') : [];
+            const swiperHtml = urls.length > 0 ? `
+                <div class="swiper">
+                    <div class="swiper-wrapper">${urls.map(u => `<div class="swiper-slide"><img src="${u}"></div>`).join('')}</div>
+                    ${urls.length > 1 ? '<div class="swiper-pagination"></div>' : ''}
+                </div>` : '';
+            
+            return `
+                <div class="post-card">
+                    ${isMine ? `<div style="position:absolute; top:15px; right:15px; z-index:10; display:flex; gap:5px;">
+                        <button onclick="openEdit('${p.id}', \`${p.content}\`)" style="background:rgba(255,255,255,0.9); border:none; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:800; cursor:pointer;">수정</button>
+                        <button onclick="deletePost('${p.id}')" style="background:rgba(255,255,255,0.9); border:none; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:800; color:#ff4d6d; cursor:pointer;">삭제</button>
+                    </div>` : ''}
+                    ${swiperHtml}
+                    <div style="padding:25px;">
+                        <p style="margin:0 0 20px; line-height:1.7; font-size:16px; white-space:pre-wrap;">${p.content.replace(/#(\S+)/g, '<span style="color:var(--main); font-weight:900;">#$1</span>')}</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f8f8f8; padding-top:15px;">
+                            <b style="color:${SQUAD_COLORS[p.user_name]}; font-size:14px;">BY ${p.user_name}</b>
+                            <span onclick="toggleLike('${p.id}')" style="cursor:pointer; font-weight:900; color:${p.liked_users?.includes(localStorage.getItem('siu_user')) ? '#ff4d6d' : '#cbd5e1'}">❤ ${p.likes || 0}</span>
+                        </div>
+                        <div id="cbox-${p.id}" style="margin-top:15px; font-size:13px;"></div>
+                        <input style="width:100%; border:none; background:#f8fafc; padding:10px; border-radius:10px; font-size:12px; margin-top:10px; box-sizing:border-box;" placeholder="댓글 달기..." onkeydown="if(event.key==='Enter') addComm('${p.id}', this)">
+                    </div>
+                </div>`;
+        }).join('');
+        
+        new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
+        data.forEach(p => loadComm(p.id));
     }
 
     async function savePost() {
         const c = document.getElementById('pContent').value; if(!c) return;
-        const btn = document.getElementById('sBtn'); btn.innerText = "저장 중..."; btn.disabled = true;
+        const btn = document.getElementById('sBtn'); btn.innerText = "업로드 중..."; btn.disabled = true;
         const files = document.getElementById('pFile').files;
         let urls = [];
-        if(files.length > 0) {
-            for(let f of files) {
-                const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}_${f.name}`;
-                await client.storage.from('photos').upload(fileName, f);
-                urls.push(client.storage.from('photos').getPublicUrl(fileName).data.publicUrl);
-            }
+        for(let f of files) {
+            const name = `${Date.now()}_${f.name}`;
+            await client.storage.from('photos').upload(name, f);
+            urls.push(client.storage.from('photos').getPublicUrl(name).data.publicUrl);
         }
-        await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user'), tags: '일반' }]);
+        await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
         location.reload();
     }
 
-    async function loadFeed(filter = 'all') {
-        const feedDiv = document.getElementById('feed');
-        feedDiv.innerHTML = '<p style="text-align:center; padding:100px 0; opacity:0.3;">RECALLING MEMORIES...</p>';
-        let { data } = await client.from('posts').select('*').order('created_at', { ascending: false });
-        if(filter !== 'all') {
-            if(filter === '추억' || filter === '생일') data = data.filter(p => p.content.includes(filter));
-            else data = data.filter(p => p.user_name === filter);
-        }
-        feedDiv.innerHTML = data.map(p => {
-            const imgArray = p.image_url ? p.image_url.split(',') : [];
-            let imageHtml = imgArray.length > 1 ? `<div class="image-slider scroll-container">${imgArray.map(url => `<img src="${url}">`).join('')}</div><p style="text-align:center; font-size:10px; opacity:0.3; margin-top:5px;">옆으로 밀기 (${imgArray.length}장)</p>` : (imgArray.length === 1 ? `<img src="${imgArray[0]}" style="width:100%; display:block; max-height:600px; object-fit:cover;">` : '');
-            return `
-                <div class="post-card">
-                    ${p.user_name === localStorage.getItem('siu_user') ? `<button onclick="deletePost('${p.id}')" style="position:absolute; top:20px; right:20px; z-index:10; background:rgba(0,0,0,0.15); border:none; border-radius:10px; padding:6px 12px; color:white; font-size:10px; cursor:pointer; font-weight:800; backdrop-filter: blur(5px);">DELETE</button>` : ''}
-                    ${imageHtml}
-                    <div style="padding:30px;">
-                        <p style="margin:0 0 25px 0; line-height:1.8; font-size:17px; color:#333; white-space:pre-wrap;">${highlightHashtags(p.content)}</p>
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f8f8f8; padding-top:20px;">
-                            <span style="font-weight:900; color:${SQUAD_COLORS[p.user_name] || '#eab308'}">BY ${p.user_name}</span>
-                            <span style="font-size:12px; opacity:0.25;">${new Date(p.created_at).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+    // 수정 로직
+    function openEdit(id, content) { currentEditId = id; document.getElementById("editContent").value = content; document.getElementById("editModal").style.display = "flex"; }
+    function closeEdit() { document.getElementById("editModal").style.display = "none"; }
+    async function submitEdit() {
+        await client.from('posts').update({ content: document.getElementById("editContent").value }).eq('id', currentEditId);
+        location.reload();
     }
 
+    // 댓글 & 좋아요
+    async function toggleLike(id) {
+        const me = localStorage.getItem('siu_user');
+        const { data } = await client.from('posts').select('*').eq('id', id).single();
+        let likes = data.likes || 0, users = data.liked_users || [];
+        if(users.includes(me)) { users = users.filter(u => u !== me); likes--; }
+        else { users.push(me); likes++; }
+        await client.from('posts').update({ likes, liked_users: users }).eq('id', id);
+        loadFeed();
+    }
+    async function addComm(pid, el) {
+        await client.from('comments').insert({ post_id:pid, user_name:localStorage.getItem('siu_user'), content:el.value });
+        el.value = ""; loadComm(pid);
+    }
+    async function loadComm(pid) {
+        const { data } = await client.from('comments').select('*').eq('post_id', pid).order('created_at', {ascending:true});
+        document.getElementById("cbox-"+pid).innerHTML = (data||[]).map(c => `<div><b>${c.user_name}</b> ${c.content}</div>`).join("");
+    }
+
+    // 캘린더 엔진
     function renderCalendar() {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
@@ -234,9 +231,8 @@
                 if (i === 0 && j < first || date > last) { cell.innerHTML = ""; }
                 else {
                     const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                    cell.setAttribute('data-date', dKey);
-                    cell.innerHTML = `<span style="font-weight:900; opacity:0.15; font-size:12px;">${date}</span><div class="ev-h"></div>`;
                     cell.onclick = () => openDateEditor(dKey);
+                    cell.innerHTML = `<span style="font-weight:900; opacity:0.15; font-size:11px;">${date}</span><div id="ev-${dKey}"></div>`;
                     date++;
                 }
                 row.appendChild(cell);
@@ -245,55 +241,37 @@
         }
         fetchCalData();
     }
-
     async function fetchCalData() {
         const { data } = await client.from('schedules').select('*');
-        allSchedules = data || [];
-        allSchedules.forEach(ev => {
-            const holder = document.querySelector(`.cal-day[data-date="${ev.target_date}"] .ev-h`);
-            if(holder) {
-                const dday = getDDay(ev.target_date);
-                let color = ev.type === '#생일' ? '#fb7185' : '#38bdf8';
-                // 캘린더 내부 레이블에 D-Day 표시 추가
-                holder.innerHTML += `<span class="day-label" style="background:${color}">${ev.title} <small style="opacity:0.8; font-size:7px;">(${dday})</small></span>`;
-            }
+        data?.forEach(ev => {
+            const h = document.getElementById(`ev-${ev.target_date}`);
+            if(h) h.innerHTML += `<span class="day-label" style="background:#38bdf8">${ev.title}</span>`;
         });
     }
-
     function openDateEditor(date) {
-        selDate = date; 
-        document.getElementById('dateEditor').style.display = 'block';
-        const ddayStr = getDDay(date);
-        document.getElementById('selectedDateText').innerText = `🗓️ ${date} (${ddayStr})`;
-        
-        const mine = allSchedules.filter(s => s.target_date === date);
-        document.getElementById('existingEvents').innerHTML = mine.map(s => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; font-size:14px; border-bottom:1px solid #f1f1f1;">
-                <span>${s.title} <span class="d-day-badge">${getDDay(s.target_date)}</span></span>
-                ${s.user_name === localStorage.getItem('siu_user') ? `<button onclick="deleteSchedule('${s.id}')" style="color:#ff4d6d; border:none; background:none; cursor:pointer; font-weight:bold;">삭제</button>` : ''}
-            </div>
-        `).join('');
+        selDate = date; document.getElementById('dateEditor').style.display = 'block';
+        document.getElementById('selectedDateText').innerText = `🗓️ ${date} (${getDDay(date)})`;
+        client.from('schedules').select('*').eq('target_date', date).then(({data}) => {
+            document.getElementById('existingEvents').innerHTML = data.map(s => `
+                <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:13px; border-bottom:1px solid #eee;">
+                    <span>${s.title} <span class="d-day-badge">${getDDay(s.target_date)}</span></span>
+                    ${s.user_name === localStorage.getItem('siu_user') ? `<button onclick="delSch('${s.id}')" style="color:#ff4d6d; border:none; background:none; font-weight:bold;">삭제</button>` : ''}
+                </div>`).join('');
+        });
     }
-
     async function saveDateEvent() {
-        const title = document.getElementById('dateInput').value; if(!title) return;
-        // 디폴트 타입 설정 (#일정)
-        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title, target_date: selDate, type: '#일정' }]);
+        const title = document.getElementById('dateInput').value;
+        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title, target_date: selDate }]);
         location.reload();
     }
-
-    async function deleteSchedule(id) { if(confirm("삭제하시겠습니까?")) { await client.from('schedules').delete().eq('id', id); location.reload(); } }
-    async function deletePost(id) { if(confirm("삭제하시겠습니까?")) { await client.from('posts').delete().eq('id', id); location.reload(); } }
+    async function delSch(id) { await client.from('schedules').delete().eq('id', id); location.reload(); }
+    async function deletePost(id) { if(confirm("삭제할까요?")) { await client.from('posts').delete().eq('id', id); location.reload(); } }
     function changeTheme(tag, btn) {
-        const color = btn.getAttribute('data-color'), bg = btn.getAttribute('data-bg');
-        document.body.style.backgroundColor = bg;
-        document.getElementById('mainTitle').style.color = color;
-        document.getElementById('sBtn').style.backgroundColor = color;
-        document.querySelectorAll('.tag-btn').forEach(b => { b.classList.remove('active'); b.style.backgroundColor = 'white'; });
-        btn.classList.add('active'); btn.style.backgroundColor = color;
-        loadFeed(tag);
+        document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); loadFeed(tag);
     }
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
+    function updateFileStatus(el) { document.getElementById('fLab').innerText = `📸 ${el.files.length}장 선택됨`; }
 </script>
 </body>
 </html>
