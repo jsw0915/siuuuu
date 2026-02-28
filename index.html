@@ -7,42 +7,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        :root { 
-            --main: #eab308; 
-            --bg: #fdfbf7; 
-            --text: #44403c; 
-            --green: #10b981; 
-            --pink: #fb7185; 
-            --blue: #38bdf8;
-        }
+        :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; --green: #10b981; --pink: #fb7185; --blue: #38bdf8; }
         body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
-        
-        .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; padding: 10px 20px; }
+        .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; padding: 10px 20px; -webkit-overflow-scrolling: touch; }
         .scroll-container::-webkit-scrollbar { display: none; }
-
         .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
         .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; scrollbar-width: none; }
         .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
-        
-        /* 캘린더 디자인 */
         .cal-day { height: 100px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; position: relative; }
         .ev-h { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; overflow-y: auto; max-height: 70px; scrollbar-width: none; }
-        
-        /* 핵심 수정: 일정 라벨 색상 강제 적용 */
-        .day-label { font-size: 10px; padding: 4px 6px; border-radius: 6px; color: white !important; display: block; font-weight: 800; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .label-green { background: var(--green) !important; } /* 일반 일정 */
-        .label-pink { background: var(--pink) !important; }   /* 기념일/생일 */
-        
-        .heart-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: white; font-size: 80px; transition: 0.4s; pointer-events: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.3); }
-        .heart-overlay.active { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-        
+        .day-label { font-size: 10px; padding: 4px 6px; border-radius: 6px; color: white !important; display: block; font-weight: 800; text-align: center; white-space: nowrap; overflow: hidden; }
+        .label-green { background: var(--green) !important; } .label-pink { background: var(--pink) !important; }
         textarea { width: 100%; min-height: 180px; border: none; background: #f8fafc; border-radius: 20px; padding: 25px; font-size: 16px; outline: none; resize: none; box-sizing: border-box; }
         .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
+        .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     </style>
 </head>
 <body>
-
 <div id="gate" style="display: flex; position: fixed; inset: 0; z-index: 9999; background: #fdfbf7; flex-direction: column; align-items: center; justify-content: center;">
     <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic;">SIUUUU!</h1>
     <div style="width: 300px; margin-top: 30px;">
@@ -50,13 +32,11 @@
         <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 20px; border-radius: 20px; font-weight: 900; border: none; margin-top:10px; cursor: pointer;">SQUAD IN</button>
     </div>
 </div>
-
 <div id="app" style="display: none; max-width: 600px; margin: 0 auto; padding-bottom: 100px;">
     <header style="padding: 40px 25px 20px; display: flex; justify-content: space-between; align-items: center;">
         <h1 id="mainTitle" style="font-size: 2.5rem; font-weight: 900; font-style: italic; margin:0;">SIUUUU! 🔥</h1>
         <button onclick="handleLogout()" style="opacity: 0.4; border: 1px solid #ccc; padding: 8px 15px; border-radius: 12px; background: none; cursor: pointer;">EXIT</button>
     </header>
-
     <div class="post-card" style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 id="calMonth" style="margin: 0; font-weight: 900; font-size: 1.5rem;"></h2>
@@ -68,155 +48,4 @@
             <thead style="color: #94a3b8; height: 30px;"><tr><th>SUN</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th></tr></thead>
             <tbody id="calBody"></tbody>
         </table>
-        
-        <div id="dateEditor" style="display:none; margin-top: 20px; padding: 20px; background: #fdfbf7; border-radius: 25px; border: 1px solid #eee;">
-            <p id="selectedDateText" style="font-size: 15px; font-weight: 900; color: #10b981; margin-bottom: 15px;"></p>
-            <div id="existingEvents" style="margin-bottom: 15px;"></div>
-            <div style="display: flex; gap: 8px;">
-                <input id="dateInput" type="text" placeholder="일정/기념일 입력" style="flex:1; padding: 15px; border-radius: 15px; border:1px solid #eee; outline: none;">
-                <button onclick="saveDateEvent()" style="background: #10b981; color:white; border:none; padding: 0 25px; border-radius: 15px; font-weight: 900;">추가</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="category-wrapper" style="position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 10px 0;">
-        <div class="scroll-container" id="categoryScroll">
-            <button onclick="changeTheme('all', this)" class="tag-btn active" data-color="#eab308" data-bg="#fdfbf7">#전체</button>
-            <button onclick="changeTheme('추억', this)" class="tag-btn" data-color="#38bdf8" data-bg="#f0f9ff">#추억🧸</button>
-            <button onclick="changeTheme('생일', this)" class="tag-btn" data-color="#fb7185" data-bg="#fff1f2">#생일🎂</button>
-            <button onclick="changeTheme('태지아', this)" class="tag-btn" data-color="#ff4d6d" data-bg="#fff0f3">#태지아</button>
-            <button onclick="changeTheme('조성우', this)" class="tag-btn" data-color="#007bff" data-bg="#f0f7ff">#조성우</button>
-            <button onclick="changeTheme('염태성', this)" class="tag-btn" data-color="#20c997" data-bg="#f0fffb">#염태성</button>
-            <button onclick="changeTheme('김태현', this)" class="tag-btn" data-color="#9b5de5" data-bg="#f8f4ff">#김태현</button>
-            <button onclick="changeTheme('이준서', this)" class="tag-btn" data-color="#f15bb5" data-bg="#fff0f9">#이준서</button>
-            <button onclick="changeTheme('이지호', this)" class="tag-btn" data-color="#d4a373" data-bg="#fdf8f3">#이지호</button>
-            <button onclick="changeTheme('이다원', this)" class="tag-btn" data-color="#7b2cbf" data-bg="#f5f0ff">#이다원</button>
-        </div>
-    </div>
-
-    <div class="input-area" style="margin: 20px 15px;">
-        <textarea id="pContent" placeholder="기록할 내용을 시원하게 입력하세요..."></textarea>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
-            <input type="file" id="pFile" style="display: none;" multiple onchange="updateFileStatus(this)">
-            <label for="pFile" id="fLab" style="flex: 1; text-align: center; padding: 18px; background: white; border-radius: 20px; font-weight: 800; border: 2px dashed #e2e8f0; color: #94a3b8; cursor: pointer;">사진 추가</label>
-            <button onclick="savePost()" id="sBtn" style="flex: 1.2; background: #eab308; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer; font-size: 16px;">기억 저장</button>
-            <button onclick="runLucky()" style="flex: 0.6; background: #10b981; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">🍀 운세</button>
-        </div>
-    </div>
-
-    <div id="feed"></div>
-</div>
-
-<script>
-    // [추가] 기념일 리스트 보강
-    const ANNIVERSARIES = { 
-        "01-01": "신정 ☀️", "02-14": "발렌타인데이 🍫", "03-01": "삼일절 🇰🇷", "03-14": "화이트데이 🍭",
-        "04-14": "블랙데이 🍜", "05-05": "어린이날 🎈", "05-08": "어버이날 💐", "05-14": "로즈데이 🌹",
-        "05-15": "스승의날 🍎", "06-06": "현충일 🇰🇷", "08-15": "광복절 🇰🇷", "10-03": "개천절 🇰🇷",
-        "10-09": "한글날 📖", "11-11": "빼빼로데이 🥢", "12-25": "크리스마스 🎄" 
-    };
-    
-    const FORTUNES = ["오늘의 SIUUU! 지수 100%", "맛있는 걸 먹으면 행운이 옵니다.", "오늘은 모든 일이 술술 풀릴 거예요."];
-    for(let i=0; i<30; i++) FORTUNES.push(`행운지수 ${Math.floor(Math.random()*40+60)}%! 가즈아!`);
-
-    const SQUAD_COLORS = { '태지아': '#ff4d6d', '조성우': '#007bff', '염태성': '#20c997', '김태현': '#9b5de5', '이준서': '#f15bb5', '이지호': '#d4a373', '이다원': '#7b2cbf', '추억': '#38bdf8', '생일': '#fb7185' };
-    const SQUAD = Object.keys(SQUAD_COLORS);
-    const SB_URL = 'https://chlqufwjiwfiqzvmocof.supabase.co';
-    const SB_KEY = 'sb_publishable_MyGDUC1VPEyrWP6THcgWEA_mk8HUpQj'; 
-    let client, viewDate = new Date(), selDate = "", allSchedules = [];
-
-    window.onload = function() {
-        client = supabase.createClient(SB_URL, SB_KEY);
-        if (localStorage.getItem('siu_user')) { showApp(); }
-    };
-
-    function handleLogin() {
-        const n = document.getElementById('userName').value.trim();
-        if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); }
-        else { alert("스쿼드 멤버 이름을 입력하세요!"); }
-    }
-    function showApp() { document.getElementById('gate').style.display = 'none'; document.getElementById('app').style.display = 'block'; renderCalendar(); loadFeed(); }
-    function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
-
-    async function renderCalendar() {
-        const y = viewDate.getFullYear(), m = viewDate.getMonth();
-        document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
-        const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
-        const body = document.getElementById('calBody');
-        
-        const { data } = await client.from('schedules').select('*');
-        allSchedules = data || [];
-        body.innerHTML = '';
-
-        let date = 1;
-        for (let i = 0; i < 6; i++) {
-            let row = document.createElement('tr');
-            for (let j = 0; j < 7; j++) {
-                let cell = document.createElement('td'); cell.className = "cal-day";
-                if (i === 0 && j < first || date > last) { cell.innerHTML = ""; }
-                else {
-                    const mmdd = `${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                    const dKey = `${y}-${mmdd}`;
-                    
-                    // 1. 시스템 기념일 (분홍색)
-                    let evHtml = ANNIVERSARIES[mmdd] ? `<span class="day-label label-pink">${ANNIVERSARIES[mmdd]}</span>` : '';
-                    
-                    // 2. 사용자 일정
-                    const dayEvents = allSchedules.filter(s => s.target_date === dKey);
-                    evHtml += dayEvents.map(ev => {
-                        // 제목에 생일, 기념일, Day가 들어가면 분홍색, 아니면 초록색
-                        const isPink = ev.title.includes('생일') || ev.title.includes('기념일') || ev.title.includes('Day');
-                        const cls = isPink ? 'label-pink' : 'label-green';
-                        return `<span class="day-label ${cls}" style="margin-top:2px;">${ev.title}</span>`;
-                    }).join('');
-                    
-                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h">${evHtml}</div>`;
-                    cell.onclick = () => openDateEditor(dKey);
-                    date++;
-                }
-                row.appendChild(cell);
-            }
-            body.appendChild(row); if (date > last) break;
-        }
-    }
-
-    async function loadFeed(filter = 'all') {
-        const feedDiv = document.getElementById('feed');
-        let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
-        posts = posts || [];
-        feedDiv.innerHTML = posts.map(p => `
-            <div class="post-card">
-                <div class="image-slider">
-                    ${(p.image_url||'').split(',').map(u => `<img src="${u}">`).join('')}
-                </div>
-                <div style="padding:25px;">
-                    <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
-                    <p style="font-size:16px; margin:10px 0 20px; line-height:1.7;">${p.content}</p>
-                </div>
-            </div>`).join('');
-    }
-
-    function openDateEditor(d) {
-        selDate = d; document.getElementById('dateEditor').style.display = 'block';
-        document.getElementById('selectedDateText').innerText = `📅 ${d} 일정`;
-        const mine = allSchedules.filter(s => s.target_date === d);
-        document.getElementById('existingEvents').innerHTML = mine.map(s => `
-            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
-                <span>${s.title}</span><button onclick="deleteSchedule('${s.id}')" style="color:red; border:none; background:none;">✕</button>
-            </div>`).join('');
-    }
-
-    async function saveDateEvent() {
-        const t = document.getElementById('dateInput').value; if(!t) return;
-        // Supabase에 저장
-        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate }]);
-        document.getElementById('dateInput').value=""; renderCalendar();
-    }
-
-    async function deleteSchedule(id) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; }
-    function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
-    function runLucky() { alert(`🍀 운세: ${FORTUNES[Math.floor(Math.random()*FORTUNES.length)]}`); }
-    function updateFileStatus(i) { document.getElementById('fLab').innerText = `📸 ${i.files.length}장 선택됨`; }
-</script>
-</body>
-</html>
+        <div id="
