@@ -1,159 +1,63 @@
-<div id="gate" style="position: fixed; inset: 0; z-index: 10000; background: #fdfbf7; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: sans-serif;">
-    <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic; margin: 0; letter-spacing: -0.05em; text-shadow: 2px 2px 0px #fef3c7;">SIUUUU!</h1>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIUUUU! ARCHIVE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --card: #ffffff; --border: #f5f0e9; --text: #57534e; --sub-bg: #fffbf7; --shadow: 0 10px 30px rgba(183, 163, 143, 0.1); }
+        body { background-color: #fdfbf7; color: var(--text); margin: 0; font-family: sans-serif; -webkit-font-smoothing: antialiased; }
+        #gate { display: flex; position: fixed; inset: 0; z-index: 10000; background: #fdfbf7; flex-direction: column; align-items: center; justify-content: center; }
+        .card-ui { background: var(--card); border-radius: 32px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .cal-day { height: 80px; vertical-align: top; padding: 6px; border: 0.5px solid #f5f0e9; cursor: pointer; }
+        .day-label { font-size: 9px; padding: 3px 6px; border-radius: 6px; display: block; margin-top: 3px; color: white; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="gate">
+    <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic; margin: 0;">SIUUUU!</h1>
     <p style="color: #94a3b8; margin-bottom: 40px; font-size: 10px; font-weight: bold; letter-spacing: 0.5em;">SQUAD ONLY ARCHIVE</p>
     <div style="width: 100%; max-width: 300px; padding: 0 20px;">
-        <input id="userName" type="text" placeholder="이름을 입력하세요" 
-               style="width: 100%; padding: 20px; border-radius: 20px; background: white; color: #334155; border: 2px solid #f1f5f9; text-align: center; outline: none; margin-bottom: 15px; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-        <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 20px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.3);">입장하기</button>
+        <input id="userName" type="text" placeholder="이름을 입력하세요" style="width: 100%; padding: 20px; border-radius: 20px; border: 2px solid #f1f5f9; text-align: center; outline: none; margin-bottom: 15px; font-size: 16px;">
+        <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 20px; border-radius: 20px; font-weight: 900; font-size: 18px; border: none; cursor: pointer;">입장하기</button>
     </div>
 </div>
 
-<div id="app" style="display: none; min-height: 100vh; max-width: 600px; margin: 0 auto; padding: 15px; padding-bottom: 100px; font-family: sans-serif;">
+<div id="app" style="display: none; min-height: 100vh; max-width: 600px; margin: 0 auto; padding: 15px;">
     <header style="padding: 25px 5px; display: flex; justify-content: space-between; align-items: center;">
-        <h1 style="font-size: 2.2rem; font-weight: 900; color: #eab308; font-style: italic; margin: 0;">SIUUUU! 🔥</h1>
-        <button onclick="handleLogout()" style="font-size: 10px; font-weight: bold; opacity: 0.5; border: 1px solid currentColor; padding: 5px 10px; border-radius: 8px; background: none; color: inherit; cursor: pointer;">LOGOUT</button>
+        <h1 style="font-size: 2.2rem; font-weight: 900; color: #eab308; font-style: italic;">SIUUUU! 🔥</h1>
+        <button onclick="handleLogout()" style="font-size: 10px; border: 1px solid; padding: 5px; cursor: pointer;">LOGOUT</button>
     </header>
 
-    <section class="card-ui" style="padding: 20px; border-radius: 32px; margin-bottom: 35px; border: 1px solid var(--border); background: var(--card); transition: all 0.5s; box-shadow: var(--shadow);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="calMonth" style="font-weight: 900; font-size: 1.5rem; margin: 0; color: var(--text);"></h2>
-            <div style="display: flex; gap: 15px;">
-                <button onclick="moveMonth(-1)" style="color: #eab308; font-weight: bold; border: none; background: none; cursor: pointer; font-size: 1.2rem;">◀</button>
-                <button onclick="moveMonth(1)" style="color: #eab308; font-weight: bold; border: none; background: none; cursor: pointer; font-size: 1.2rem;">▶</button>
-            </div>
+    <section class="card-ui" style="padding: 20px; margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <h2 id="calMonth" style="margin:0;"></h2>
+            <div><button onclick="moveMonth(-1)">◀</button> <button onclick="moveMonth(1)">▶</button></div>
         </div>
-        <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-            <thead>
-                <tr style="opacity: 0.5; font-size: 10px; text-transform: uppercase; color: var(--text);">
-                    <th style="color:#f87171; padding-bottom: 10px;">Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th style="color:#7dd3fc">Sat</th>
-                </tr>
-            </thead>
+        <table style="width: 100%; text-align: center;">
             <tbody id="calBody"></tbody>
         </table>
-
-        <div id="dateEditor" style="display:none; margin-top: 20px; padding: 15px; background: var(--sub-bg); border-radius: 20px; border: 1px solid var(--border);">
-            <p id="selectedDateText" style="font-size: 12px; font-weight: 900; color: #eab308; margin-bottom: 10px;"></p>
-            <div style="display: flex; gap: 8px;">
-                <input id="dateInput" type="text" placeholder="내용을 적어줘" style="flex:1; background: white; border: 1px solid #f1f5f9; padding: 12px; border-radius: 12px; font-size: 12px; outline: none; color: #334155;">
-                <select id="dateType" style="background: white; border: 1px solid #f1f5f9; border-radius: 12px; padding:0 8px; font-size:11px; color: #334155;">
-                    <option value="#일정">📅 일정</option>
-                    <option value="#디데이">🚩 디데이</option>
-                </select>
-                <button onclick="saveDateEvent()" style="background: #7dd3fc; color:white; border:none; padding:0 15px; border-radius:12px; font-weight:bold; cursor: pointer;">등록</button>
-            </div>
+        <div id="dateEditor" style="display:none; margin-top:15px;">
+            <input id="dateInput" type="text" placeholder="일정 입력" style="padding:8px; border-radius:8px; border:1px solid #ddd;">
+            <select id="dateType"><option value="#일정">📅 일정</option><option value="#디데이">🚩 디데이</option></select>
+            <button onclick="saveDateEvent()" style="background:#7dd3fc; border:none; padding:8px; border-radius:8px; color:white;">등록</button>
         </div>
     </section>
 
-    <div style="width: 100%; overflow: hidden; margin-bottom: 35px; cursor: grab;" id="dragWrapper">
-        <div id="scrollContainer" class="scroll-box">
-            <button onclick="loadWithMode('all', this)" class="tag-btn active">#전체</button>
-            <button onclick="loadWithMode('추억', this)" class="tag-btn">#추억 🧸</button>
-            <button onclick="loadWithMode('생일', this)" class="tag-btn">#생일 🎂</button>
-            <button onclick="loadWithMode('#디데이', this)" class="tag-btn">#디데이 🚩</button>
-            <button onclick="loadWithMode('#일정', this)" class="tag-btn">#일정 📅</button>
-            <button onclick="loadWithMode('태지아', this)" class="tag-btn">#태지아</button>
-            <button onclick="loadWithMode('조성우', this)" class="tag-btn">#조성우</button>
-            <button onclick="loadWithMode('염태성', this)" class="tag-btn">#염태성</button>
-            <button onclick="loadWithMode('김태현', this)" class="tag-btn">#김태현</button>
-            <button onclick="loadWithMode('이준서', this)" class="tag-btn">#이준서</button>
-            <button onclick="loadWithMode('이지호', this)" class="tag-btn">#이지호</button>
-            <button onclick="loadWithMode('이다원', this)" class="tag-btn">#이다원</button>
-        </div>
-    </div>
-
-    <section class="card-ui" style="padding: 25px; margin-bottom: 40px; background: var(--card); border-radius: 32px; border: 1px solid var(--border); box-shadow: var(--shadow);">
-        <textarea id="pContent" placeholder="멤버들과 공유하고 싶은 순간은?" style="width: 100%; background: var(--sub-bg); border-radius: 20px; padding: 15px; border: none; outline: none; margin-bottom: 15px; height: 90px; resize: none; color: var(--text); font-size: 14px;"></textarea>
+    <section class="card-ui" style="padding: 20px; margin-bottom: 30px;">
+        <textarea id="pContent" placeholder="기록을 남겨주세요" style="width: 100%; height: 80px; border: none; outline: none;"></textarea>
         <div style="display: flex; gap: 10px;">
             <input type="file" id="pFile" style="display: none;" onchange="document.getElementById('fLab').innerText='📸 사진 완료'">
-            <label for="pFile" id="fLab" style="flex: 1; background: var(--sub-bg); text-align: center; padding: 16px; border-radius: 18px; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px dashed var(--border); color: #94a3b8;">사진 추가</label>
-            <button onclick="savePost()" id="sBtn" style="flex: 1; background: #eab308; color: white; font-weight: 900; padding: 16px; border-radius: 18px; border: none; cursor: pointer;">기억 저장</button>
+            <label for="pFile" id="fLab" style="flex:1; border: 1px dashed #ddd; text-align: center; padding: 10px; cursor: pointer;">사진 추가</label>
+            <button onclick="savePost()" id="sBtn" style="flex:1; background: #eab308; color: white; border: none; border-radius: 10px;">기억 저장</button>
         </div>
     </section>
-
-    <div id="feed" style="display: flex; flex-direction: column; gap: 30px;"></div>
+    <div id="feed"></div>
 </div>
 
-<style>
-    :root { 
-        --card: #ffffff; 
-        --border: #f5f0e9; 
-        --text: #57534e; 
-        --sub-bg: #fffbf7;
-        --shadow: 0 10px 30px rgba(183, 163, 143, 0.1);
-    }
-    
-    body { background-color: #fdfbf7; color: var(--text); margin: 0; font-family: sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-
-    /* 가로 스크롤 박스 최적화 */
-    .scroll-box {
-        display: flex;
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        gap: 12px;
-        padding: 10px 20px;
-        /* 스크롤바가 있음을 살짝 보여줌 (PC용) */
-        scrollbar-width: thin;
-        scrollbar-color: #eab308 transparent;
-    }
-
-    /* PC에서 스크롤바 디자인 */
-    .scroll-box::-webkit-scrollbar { height: 4px; }
-    .scroll-box::-webkit-scrollbar-track { background: transparent; }
-    .scroll-box::-webkit-scrollbar-thumb { background: #eab308; border-radius: 10px; opacity: 0.3; }
-
-    .tag-btn { 
-        flex: 0 0 auto; 
-        padding: 12px 20px; 
-        border-radius: 100px; 
-        border: 1px solid #f1f5f9 !important; 
-        background: white; 
-        color: #78716c; 
-        font-size: 13px; 
-        font-weight: 700; 
-        cursor: pointer; 
-        user-select: none; /* 드래그 시 텍스트 선택 방지 */
-    }
-    .tag-btn.active { background: #eab308 !important; border-color: #eab308 !important; color: white !important; }
-
-    .cal-day { height: 80px; vertical-align: top; padding: 6px; border: 0.5px solid #fdfbf7; cursor: pointer; }
-    .cal-num { font-weight: 800; font-size: 13px; color: #d6d3d1; display: block; margin-bottom: 4px; }
-    .day-label { font-size: 8px; padding: 3px 6px; border-radius: 6px; display: block; margin-top: 3px; color: white; font-weight: bold; overflow: hidden; white-space: nowrap; text-align: center; }
-
-    body.light-theme { --card: rgba(255, 255, 255, 0.95); --border: rgba(234, 179, 8, 0.1); --text: #44403c; --sub-bg: rgba(255,255,255,0.6); }
-</style>
-
 <script>
-    // [가로 드래그 기능을 위한 스크립트 추가]
-    const scrollContainer = document.getElementById('scrollContainer');
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-
-    scrollContainer.addEventListener('mousedown', (e) => {
-        isDown = true;
-        scrollContainer.classList.add('active');
-        startX = e.pageX - scrollContainer.offsetLeft;
-        scrollLeft = scrollContainer.scrollLeft;
-        document.getElementById('dragWrapper').style.cursor = 'grabbing';
-    });
-    scrollContainer.addEventListener('mouseleave', () => {
-        isDown = false;
-        document.getElementById('dragWrapper').style.cursor = 'grab';
-    });
-    scrollContainer.addEventListener('mouseup', () => {
-        isDown = false;
-        document.getElementById('dragWrapper').style.cursor = 'grab';
-    });
-    scrollContainer.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - scrollContainer.offsetLeft;
-        const walk = (x - startX) * 2; // 스크롤 속도 조절
-        scrollContainer.scrollLeft = scrollLeft - walk;
-    });
-
-    // [기존 supabase 로직]
     const SQUAD = ['태지아', '조성우', '염태성', '김태현', '이준서', '이지호', '이다원'];
     const SB_URL = 'https://chlqufwjiwfiqzvmocof.supabase.co';
     const SB_KEY = 'sb_publishable_MyGDUC1VPEyrWP6THcgWEA_mk8HUpQj'; 
@@ -161,74 +65,55 @@
     let viewDate = new Date();
     let selDate = "";
 
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof supabase !== 'undefined') {
-            client = supabase.createClient(SB_URL, SB_KEY);
-            if (localStorage.getItem('siu_user')) showApp();
-        }
-    });
+    window.onload = function() {
+        client = supabase.createClient(SB_URL, SB_KEY);
+        if (localStorage.getItem('siu_user')) showApp();
+    };
 
     function handleLogin() {
         const n = document.getElementById('userName').value.trim();
         if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); }
+        else { alert("이름을 확인해 주세요!"); }
     }
 
     function showApp() {
         document.getElementById('gate').style.display = 'none';
         document.getElementById('app').style.display = 'block';
-        renderCalendar();
-        loadWithMode('all');
+        renderCalendar(); loadFeed();
     }
 
     function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
 
-    async function renderCalendar() {
+    function renderCalendar() {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
-        document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
-        const first = new Date(y, m, 1).getDay();
+        document.getElementById('calMonth').innerText = `${y}.${m+1}`;
         const last = new Date(y, m + 1, 0).getDate();
         const body = document.getElementById('calBody'); body.innerHTML = '';
-        
         let date = 1;
         for (let i = 0; i < 6; i++) {
             let row = document.createElement('tr');
             for (let j = 0; j < 7; j++) {
-                let cell = document.createElement('td');
-                cell.className = "cal-day";
-                if (i === 0 && j < first || date > last) {
-                    cell.innerHTML = "";
-                } else {
+                let cell = document.createElement('td'); cell.className = "cal-day";
+                if (date <= last) {
                     const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                    cell.setAttribute('data-date', dKey);
-                    cell.innerHTML = `<span class="cal-num">${date}</span><div class="ev-h"></div>`;
-                    cell.onclick = () => { 
-                        selDate = dKey; 
-                        document.getElementById('dateEditor').style.display='block'; 
-                        document.getElementById('selectedDateText').innerText=`📍 ${dKey} 기록`;
-                    };
+                    cell.innerHTML = `<span>${date}</span><div class="ev-h" data-date="${dKey}"></div>`;
+                    cell.onclick = () => { selDate = dKey; document.getElementById('dateEditor').style.display='block'; };
                     date++;
                 }
                 row.appendChild(cell);
             }
             body.appendChild(row); if (date > last) break;
         }
-        fetchCalData(y, m);
+        fetchCalData();
     }
 
-    async function fetchCalData(y, m) {
-        const { data } = await client.from('posts').select('*').or('tags.ilike.%#일정%,tags.ilike.%#디데이%,tags.ilike.%#생일%');
+    async function fetchCalData() {
+        const { data } = await client.from('schedules').select('*');
         data?.forEach(ev => {
-            const k = ev.created_at?.split('T')[0] || ev.content;
-            const holder = document.querySelector(`.cal-day[data-date="${k}"] .ev-h`);
+            const holder = document.querySelector(`.ev-h[data-date="${ev.target_date}"]`);
             if(holder) {
-                let c = "#7dd3fc"; let t = ev.content;
-                if(ev.tags.includes("#디데이")) { 
-                    c = "#38bdf8"; 
-                    const diff = Math.ceil((new Date(k) - new Date())/(1000*60*60*24));
-                    t = `D${diff>=0?'-':'+'}${Math.abs(diff)} ${ev.content}`;
-                }
-                else if(ev.tags.includes("#생일")) { c = "#fbbf24"; t = `🎂 ${ev.user_name}`; }
-                holder.innerHTML += `<span class="day-label" style="background:${c}">${t}</span>`;
+                const isDday = ev.type === "#디데이";
+                holder.innerHTML += `<span class="day-label" style="background:${isDday ? '#38bdf8' : '#7dd3fc'}">${isDday ? ev.D_day : ''} ${ev.title}</span>`;
             }
         });
     }
@@ -237,53 +122,37 @@
 
     async function saveDateEvent() {
         const title = document.getElementById('dateInput').value;
-        if(!title) return;
-        await client.from('posts').insert([{ user_name: localStorage.getItem('siu_user'), content: title, tags: document.getElementById('dateType').value, created_at: selDate }]);
+        const type = document.getElementById('dateType').value;
+        const target = new Date(selDate);
+        const diff = Math.ceil((target - new Date().setHours(0,0,0,0)) / (1000*60*60*24));
+        const dDayText = diff === 0 ? "D-Day" : `D${diff > 0 ? '-' : '+'}${Math.abs(diff)}`;
+        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title, target_date: selDate, D_day: dDayText, type }]);
         location.reload();
-    }
-
-    async function loadWithMode(tag, btn) {
-        if(btn) {
-            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.body.className = "light-theme"; 
-            if(tag === '추억') document.body.style.backgroundColor = "#faf7ed"; 
-            else if(tag === '생일') document.body.style.backgroundColor = "#fff1f2"; 
-            else if(tag === '#디데이' || tag === '#일정') document.body.style.backgroundColor = "#f0f9ff"; 
-            else if(SQUAD.includes(tag)) document.body.style.backgroundColor = "#f0fdf4"; 
-            else { document.body.style.backgroundColor = "#fdfbf7"; document.body.className = ""; }
-        }
-        const { data } = await client.from('posts').select('*').not('tags', 'ilike', '%#생일설정%').order('created_at', { ascending: false });
-        let filtered = (tag === 'all') ? data : data.filter(p => p.tags && p.tags.includes(tag));
-        renderFeed(filtered);
-    }
-
-    function renderFeed(data) {
-        const f = document.getElementById('feed');
-        f.innerHTML = data.map(p => `
-            <div style="background:var(--card); border: 1px solid var(--border); border-radius:30px; overflow:hidden; color:inherit; box-shadow: var(--shadow); margin-bottom:10px;">
-                ${p.image_url ? `<img src="${p.image_url}" style="width:100%; max-height:450px; object-fit:cover;">` : ''}
-                <div style="padding:25px;">
-                    <p style="margin-bottom:15px; font-size:15.5px; line-height:1.7;">${p.content}</p>
-                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; opacity:0.6; border-top:1px solid var(--border); padding-top:15px;">
-                        <span style="color:#eab308;">BY ${p.user_name}</span>
-                        <span>${new Date(p.created_at).toLocaleDateString()}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
     }
 
     async function savePost() {
         const c = document.getElementById('pContent').value; if(!c) return;
-        const b = document.getElementById('sBtn'); b.innerText = "저장 중...";
+        document.getElementById('sBtn').innerText = "저장 중...";
         let url = ""; const f = document.getElementById('pFile').files[0];
         if(f) {
-            const n = `${Date.now()}_${f.name}`;
-            await client.storage.from('photos').upload(n, f);
-            url = client.storage.from('photos').getPublicUrl(n).data.publicUrl;
+            const fileName = `${Date.now()}_${f.name}`;
+            await client.storage.from('photos').upload(fileName, f);
+            url = client.storage.from('photos').getPublicUrl(fileName).data.publicUrl;
         }
         await client.from('posts').insert([{ content: c, image_url: url, user_name: localStorage.getItem('siu_user'), tags: '일반' }]);
         location.reload();
     }
+
+    async function loadFeed() {
+        const { data } = await client.from('posts').select('*').order('created_at', { ascending: false });
+        document.getElementById('feed').innerHTML = data.map(p => `
+            <div class="card-ui" style="overflow:hidden; margin-bottom:20px; padding:15px;">
+                ${p.image_url ? `<img src="${p.image_url}" style="width:100%; border-radius:10px;">` : ''}
+                <p>${p.content}</p>
+                <div style="font-size:10px; opacity:0.5;">BY ${p.user_name}</div>
+            </div>
+        `).join('');
+    }
 </script>
+</body>
+</html>
