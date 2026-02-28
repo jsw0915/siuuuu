@@ -9,58 +9,48 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        :root {
-            --bg-gradient: linear-gradient(135deg, #fdf2f8 0%, #ede9fe 50%, #e0f2fe 100%);
-            --main-gradient: linear-gradient(90deg, #ff4d6d 0%, #9b5de5 100%);
-            --luck-gradient: linear-gradient(90deg, #10b981 0%, #20c997 100%);
-        }
-        body { margin: 0; font-family: 'Pretendard', sans-serif; background: var(--bg-gradient); color: #374151; -webkit-tap-highlight-color: transparent; min-height: 100vh; overflow-x: hidden; }
+        :root { --bg: #fdfbf7; --main: #eab308; --accent: #ff4d6d; }
+        body { margin: 0; font-family: 'Pretendard', sans-serif; background: var(--bg); color: #1f2937; -webkit-tap-highlight-color: transparent; }
 
-        /* UI 구성요소 */
-        .header { position: sticky; top: 0; z-index: 1000; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        /* UI 고도화 */
+        .header { position: sticky; top: 0; z-index: 1000; background: rgba(253,251,247,0.9); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
         .category-bar { display: flex; gap: 10px; overflow-x: auto; padding: 15px 20px; scrollbar-width: none; }
-        .category-bar::-webkit-scrollbar { display: none; }
-        .tag-btn { flex: 0 0 auto; padding: 10px 22px; border-radius: 50px; background: white; border: 1.5px solid #eee; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.3s; color: #78716c; }
-        .tag-btn.active { color: white !important; transform: scale(1.05); box-shadow: 0 5px 20px rgba(0,0,0,0.1); border-color: transparent !important; }
+        .tag-btn { flex: 0 0 auto; padding: 10px 20px; border-radius: 50px; background: #fff; border: 1.5px solid #eee; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.3s; }
+        .tag-btn.active { color: white !important; transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 
-        .box { max-width: 550px; margin: 20px auto; background: white; border-radius: 35px; padding: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.05); }
-        textarea { width: 100%; border-radius: 20px; border: 1px solid #f1f5f9; background: #f8fafc; padding: 18px; font-family: inherit; margin-bottom: 12px; outline: none; resize: none; box-sizing: border-box; }
+        .box { max-width: 550px; margin: 20px auto; background: #fff; border-radius: 30px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; }
+        textarea { width: 100%; border-radius: 18px; border: 1px solid #f1f5f9; background: #f8fafc; padding: 15px; font-family: inherit; margin-bottom: 12px; outline: none; resize: none; }
         
-        /* 카드 디자인 */
-        .card { background: white; border-radius: 35px; margin: 0 18px 30px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.07); position: relative; animation: up 0.6s ease-out; }
-        @keyframes up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .card-body { padding: 25px; }
-
-        /* 수정/삭제 메뉴 */
-        .edit-menu { position: absolute; top: 15px; right: 15px; z-index: 10; display: flex; gap: 5px; }
-        .edit-btn { background: rgba(255,255,255,0.9); border: none; padding: 6px 12px; border-radius: 10px; font-size: 11px; font-weight: 800; cursor: pointer; color: #64748b; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-        /* 수정 모달 */
-        #editModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; backdrop-filter: blur(10px); }
-        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; background: white; padding: 30px; border-radius: 30px; }
-
+        /* 슬라이더 스타일 */
+        .swiper { width: 100%; height: auto; border-bottom: 1px solid #eee; }
         .swiper-slide img { width: 100%; display: block; object-fit: cover; aspect-ratio: 1/1; }
-        .float-cal { position: fixed; bottom: 35px; right: 25px; width: 65px; height: 65px; border-radius: 50%; background: var(--main-gradient); color: white; border: none; font-size: 24px; box-shadow: 0 15px 35px rgba(155, 93, 229, 0.4); cursor: pointer; z-index: 2000; }
+        .swiper-pagination-bullet-active { background: var(--main) !important; }
+
+        .card { background: #fff; border-radius: 35px; margin: 0 18px 30px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.06); position: relative; }
+        .card-body { padding: 25px; }
+        .liked-list { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+
+        .float-cal { position: fixed; bottom: 30px; right: 25px; width: 65px; height: 65px; border-radius: 50%; background: #111; color: #fff; border: none; font-size: 24px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); cursor: pointer; z-index: 2000; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div class="category-bar" id="categoryBar">
-        <button class="tag-btn active" data-color="var(--main-gradient)" onclick="changeTheme('all', this)">#전체</button>
+        <button class="tag-btn active" data-color="#eab308" onclick="changeTheme('all', this)">#전체</button>
     </div>
 </div>
 
 <div class="box">
-    <select id="username" style="width:100%; padding:15px; border-radius:18px; border:1px solid #eee; margin-bottom:12px; font-weight:700;">
+    <select id="username" style="width:100%; padding:12px; border-radius:15px; border:1px solid #eee; margin-bottom:10px; font-weight:700;">
         <option value="">누구신가요?</option>
     </select>
-    <textarea id="content" rows="3" placeholder="오늘 우리의 소중한 조각을 남겨주세요..."></textarea>
+    <textarea id="content" rows="3" placeholder="오늘 우리의 조각을 남겨주세요..."></textarea>
     <input type="file" id="photo" multiple style="display:none" onchange="updateFileCount(this)">
-    <label for="photo" id="fileLab" style="display:block; text-align:center; padding:18px; background:#f1f5f9; border-radius:18px; font-size:13px; font-weight:800; margin-bottom:15px; cursor:pointer;">📸 사진 선택하기 (여러 장 가능)</label>
+    <label for="photo" id="fileLab" style="display:block; text-align:center; padding:15px; background:#f1f5f9; border-radius:15px; font-size:13px; font-weight:800; margin-bottom:12px; cursor:pointer; color:#475569;">📸 사진 선택하기 (여러 장 가능)</label>
     <div style="display:flex; gap:10px;">
-        <button onclick="uploadPost()" id="uploadBtn" style="flex:2; background:var(--main-gradient); color:white; border:none; padding:15px; border-radius:15px; font-weight:900; cursor:pointer;">저장하기</button>
-        <button onclick="showFortune()" style="flex:1; background:var(--luck-gradient); color:white; border:none; padding:15px; border-radius:15px; font-weight:900; cursor:pointer;">운세 🍀</button>
+        <button class="btn" id="uploadBtn" onclick="uploadPost()" style="flex:2; background:var(--main); color:white; border:none; padding:15px; border-radius:15px; font-weight:900; cursor:pointer;">저장하기</button>
+        <button class="btn" onclick="showFortune()" style="flex:1; background:#10b981; color:white; border:none; padding:15px; border-radius:15px; font-weight:900; cursor:pointer;">운세 🍀</button>
     </div>
 </div>
 
@@ -68,34 +58,21 @@
 <div class="feed" id="feed"></div>
 <button class="float-cal" onclick="toggleCalendar()">📅</button>
 
-<div id="editModal">
-    <div class="modal-content">
-        <h3 style="margin-top:0; background:var(--main-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">📝 게시물 수정</h3>
-        <textarea id="editContent" rows="5"></textarea>
-        <div style="display:flex; gap:10px;">
-            <button onclick="submitEdit()" id="updateBtn" style="flex:2; background:var(--main-gradient); color:white; border:none; padding:15px; border-radius:15px; font-weight:900;">수정 완료</button>
-            <button onclick="closeEdit()" style="flex:1; background:#eee; border:none; border-radius:15px; font-weight:900;">취소</button>
-        </div>
-    </div>
-</div>
-
 <script>
+// [환경 설정]
 const SB_URL = "YOUR_SUPABASE_URL";
 const SB_KEY = "YOUR_SUPABASE_KEY";
 const client = supabase.createClient(SB_URL, SB_KEY);
 
-const SQUAD = { 
-    "태지아": "linear-gradient(90deg, #ff4d6d 0%, #ff80ab 100%)", 
-    "조성우": "linear-gradient(90deg, #007bff 0%, #4facfe 100%)", 
-    "염태성": "linear-gradient(90deg, #20c997 0%, #87fcef 100%)", 
-    "김태현": "linear-gradient(90deg, #9b5de5 0%, #cdb4db 100%)", 
-    "이준서": "linear-gradient(90deg, #f15bb5 0%, #f7c5cc 100%)", 
-    "이지호": "linear-gradient(90deg, #d4a373 0%, #ffb347 100%)", 
-    "이다원": "linear-gradient(90deg, #7b2cbf 0%, #e0c3fc 100%)" 
-};
-let globalPosts = [], calendarMode = false, currentTag = "all", currentEditId = null, calendarDate = new Date();
+const SQUAD = { "태지아": "#ff4d6d", "조성우": "#007bff", "염태성": "#20c997", "김태현": "#9b5de5", "이준서": "#f15bb5", "이지호": "#d4a373", "이다원": "#7b2cbf" };
+let globalPosts = [], calendarMode = false, currentTag = "all", calendarDate = new Date();
 
 window.onload = () => {
+    initUI();
+    loadFeed();
+};
+
+function initUI() {
     const bar = document.getElementById("categoryBar");
     const sel = document.getElementById("username");
     Object.keys(SQUAD).forEach(name => {
@@ -105,8 +82,7 @@ window.onload = () => {
         bar.appendChild(btn);
         sel.innerHTML += `<option value="${name}">${name}</option>`;
     });
-    loadFeed();
-};
+}
 
 async function loadFeed() {
     const { data } = await client.from("posts").select("*").order("created_at", {ascending:false});
@@ -115,119 +91,156 @@ async function loadFeed() {
 }
 
 function renderMain() {
-    const view = document.getElementById("viewArea"); const feed = document.getElementById("feed");
+    const view = document.getElementById("viewArea");
+    const feed = document.getElementById("feed");
     view.innerHTML = ""; feed.innerHTML = "";
     if(calendarMode) { renderCalendar(); return; }
     const list = currentTag === "all" ? globalPosts : globalPosts.filter(p => p.user_name === currentTag);
     list.forEach(p => renderCard(p, feed));
-    new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
+    // 슬라이더 초기화 (렌더링 후 실행)
+    new Swiper('.swiper', { pagination: { el: '.swiper-pagination' }, loop: false });
 }
 
 function renderCard(p, container) {
-    const grad = SQUAD[p.user_name] || "var(--main-gradient)";
+    const color = SQUAD[p.user_name] || "#eee";
     const me = document.getElementById("username").value;
-    const isMine = p.user_name === me;
+    const isLiked = p.liked_users?.includes(me);
     
+    // 슬라이더 구조 생성
+    let imgSection = "";
+    if(p.image_urls && p.image_urls.length > 0) {
+        imgSection = `
+            <div class="swiper">
+                <div class="swiper-wrapper">
+                    ${p.image_urls.map(url => `<div class="swiper-slide"><img src="${url}" loading="lazy"></div>`).join('')}
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>`;
+    }
+
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-        <div style="height:10px; background:${grad}"></div>
-        ${isMine ? `<div class="edit-menu">
-            <button class="edit-btn" onclick="openEdit('${p.id}', \`${p.content}\`)">수정</button>
-            <button class="edit-btn" style="color:#ff4d6d" onclick="deletePost('${p.id}')">삭제</button>
-        </div>` : ""}
-        ${p.image_urls?.length ? `<div class="swiper"><div class="swiper-wrapper">${p.image_urls.map(url => `<div class="swiper-slide"><img src="${url}"></div>`).join('')}</div><div class="swiper-pagination"></div></div>` : ""}
+        <div style="height:8px; background:${color}"></div>
+        ${imgSection}
         <div class="card-body">
-            <div style="white-space:pre-wrap; line-height:1.7; font-size:16px; margin-bottom:15px;">${p.content}</div>
+            <div style="white-space:pre-wrap; line-height:1.7; font-size:15px; margin-bottom:15px; font-weight:500;">${p.content}</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <b style="background:${grad}; -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-size:14px;">BY ${p.user_name}</b>
-                <span onclick="toggleLike('${p.id}')" style="cursor:pointer; font-weight:900; color:${p.liked_users?.includes(me)?'#ff4d6d':'#cbd5e1'}">❤ ${p.likes||0}</span>
+                <b style="color:${color}; font-size:14px;">BY ${p.user_name}</b>
+                <span onclick="toggleLike('${p.id}')" style="cursor:pointer; font-weight:900; color:${isLiked?SQUAD['태지아']:'#cbd5e1'}; font-size:16px;">❤ ${p.likes||0}</span>
             </div>
-            ${p.liked_users?.length ? `<div style="font-size:11px; color:#94a3b8; margin-top:5px;">${p.liked_users.join(', ')}님이 좋아합니다.</div>` : ""}
-            <div id="cbox-${p.id}" style="margin-top:15px; border-top:1px solid #f1f5f9; padding-top:10px;"></div>
-            <input style="width:100%; border:none; background:#f8fafc; padding:12px; border-radius:12px; font-size:13px; margin-top:10px; box-sizing:border-box;" placeholder="댓글 달기..." onkeydown="if(event.key==='Enter') addComm('${p.id}', this)">
+            ${p.liked_users?.length ? `<div class="liked-list">${p.liked_users.join(', ')}님이 좋아합니다.</div>` : ''}
+            <div class="comm-wrap" id="cbox-${p.id}"></div>
+            <input style="width:100%; border:none; background:#f1f5f9; padding:12px; border-radius:12px; font-size:13px; margin-top:15px; box-sizing:border-box; outline:none;" 
+                   placeholder="댓글로 이야기를 나눠보세요..." onkeydown="if(event.key==='Enter') addComm('${p.id}', this)">
         </div>`;
     container.appendChild(card);
     loadComm(p.id);
 }
 
+// 업로드, 좋아요, 댓글, 캘린더 로직 (동일하게 유지하되 시뮬레이션 기반 예외처리 강화)
 async function uploadPost() {
     const user = document.getElementById("username").value;
     const content = document.getElementById("content").value;
     const files = document.getElementById("photo").files;
-    if(!user || !content) return alert("이름과 내용을 입력해줘!");
-    
     const btn = document.getElementById("uploadBtn");
-    btn.innerText = "업로드 중..."; btn.disabled = true;
+    if(!user || !content) return alert("멤버와 내용을 모두 입력해주세요!");
+
+    btn.innerText = "데이터 전송 중...";
+    btn.disabled = true;
 
     let urls = [];
-    for(let f of files) {
-        const path = `archive/${Date.now()}_${f.name}`;
-        await client.storage.from("photos").upload(path, f);
-        urls.push(client.storage.from("photos").getPublicUrl(path).data.publicUrl);
+    try {
+        for(let file of files) {
+            const path = `archive/${Date.now()}_${file.name}`;
+            await client.storage.from("photos").upload(path, file);
+            urls.push(client.storage.from("photos").getPublicUrl(path).data.publicUrl);
+        }
+        await client.from("posts").insert({ user_name: user, content: content, image_urls: urls, likes: 0, liked_users: [] });
+        location.reload();
+    } catch (e) {
+        alert("업로드 중 오류가 발생했습니다.");
+        btn.disabled = false;
+        btn.innerText = "저장하기";
     }
-    await client.from("posts").insert({ user_name:user, content:content, image_urls:urls });
-    location.reload();
 }
 
-function openEdit(id, content) { currentEditId = id; document.getElementById("editContent").value = content; document.getElementById("editModal").style.display = "block"; }
-function closeEdit() { document.getElementById("editModal").style.display = "none"; }
-async function submitEdit() {
-    const btn = document.getElementById("updateBtn"); btn.innerText = "수정 중...";
-    await client.from("posts").update({ content: document.getElementById("editContent").value }).eq("id", currentEditId);
-    location.reload();
+function updateFileCount(el) {
+    document.getElementById('fileLab').innerText = el.files.length > 0 ? `✅ ${el.files.length}장의 사진 준비됨` : "📸 사진 선택하기 (여러 장 가능)";
 }
-async function deletePost(id) { if(confirm("삭제할까요?")) { await client.from("posts").delete().eq("id", id); location.reload(); } }
 
 async function toggleLike(id) {
-    const me = document.getElementById("username").value; if(!me) return alert("누구신가요?");
-    const { data } = await client.from("posts").select("*").eq("id", id).single();
-    let likes = data.likes, users = data.liked_users || [];
-    if(users.includes(me)) { users = users.filter(u => u !== me); likes--; }
-    else { users.push(me); likes++; }
-    await client.from("posts").update({ likes, liked_users: users }).eq("id", id);
+    const me = document.getElementById("username").value;
+    if(!me) return alert("누구신지 먼저 선택해주세요! 😊");
+    const { data } = await client.from("posts").select("likes,liked_users").eq("id", id).single();
+    let { likes, liked_users } = data;
+    liked_users = liked_users || [];
+    if(liked_users.includes(me)) { liked_users = liked_users.filter(u => u !== me); likes--; }
+    else { liked_users.push(me); likes++; }
+    await client.from("posts").update({ likes, liked_users }).eq("id", id);
     loadFeed();
 }
 
 async function addComm(pid, el) {
-    const user = document.getElementById("username").value; if(!user || !el.value) return;
+    const user = document.getElementById("username").value;
+    if(!user || !el.value.trim()) return;
     await client.from("comments").insert({ post_id:pid, user_name:user, content:el.value });
     el.value = ""; loadComm(pid);
 }
 
 async function loadComm(pid) {
     const { data } = await client.from("comments").select("*").eq("post_id", pid).order("created_at", {ascending:true});
-    document.getElementById("cbox-"+pid).innerHTML = (data||[]).map(c => `<div style="font-size:13px; margin-bottom:5px;"><b>${c.user_name}</b> ${c.content}</div>`).join("");
+    const box = document.getElementById("cbox-"+pid);
+    const me = document.getElementById("username").value;
+    box.innerHTML = (data||[]).map(c => `
+        <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:13px;"><b style="color:${SQUAD[c.user_name]}">${c.user_name}</b> ${c.content}</span>
+            ${c.user_name === me ? `<span style="color:#cbd5e1; font-size:10px; cursor:pointer;" onclick="delComm('${c.id}','${pid}')">삭제</span>` : ""}
+        </div>`).join("");
 }
 
-function changeTheme(tag, btn) {
-    currentTag = tag;
-    document.querySelectorAll(".tag-btn").forEach(b => { b.classList.remove("active"); b.style.background="#fff"; b.style.color="#78716c"; });
-    btn.classList.add("active"); btn.style.background = btn.getAttribute("data-color"); btn.style.color="#fff";
-    renderMain();
-}
+async function delComm(id, pid) { if(confirm("댓글을 삭제할까요?")) { await client.from("comments").delete().eq("id", id); loadComm(pid); } }
 
-function updateFileCount(el) { document.getElementById("fileLab").innerText = `✅ ${el.files.length}장 선택됨`; }
 function toggleCalendar() { calendarMode = !calendarMode; renderMain(); }
 function renderCalendar() {
-    const view = document.getElementById("viewArea"); const [y, m] = [calendarDate.getFullYear(), calendarDate.getMonth()];
-    const first = new Date(y, m, 1).getDay(); const last = new Date(y, m+1, 0).getDate();
-    let h = `<div style="display:flex; justify-content:space-between; align-items:center; padding:20px 30px;"><button class="tag-btn" onclick="chM(-1)">◀</button><b>${y}.${m+1}</b><button class="tag-btn" onclick="chM(1)">▶</button></div><div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; padding:0 20px 40px;">`;
+    const view = document.getElementById("viewArea");
+    const [y, m] = [calendarDate.getFullYear(), calendarDate.getMonth()];
+    const first = new Date(y, m, 1).getDay();
+    const last = new Date(y, m+1, 0).getDate();
+    let h = `<div style="display:flex; justify-content:space-between; align-items:center; padding:20px 30px;">
+                <button class="tag-btn" onclick="chM(-1)">◀</button><b style="font-size:18px;">${y}.${m+1}</b><button class="tag-btn" onclick="chM(1)">▶</button>
+             </div><div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; padding:0 20px 30px;">`;
     for(let i=0; i<first; i++) h += `<div></div>`;
     for(let d=1; d<=last; d++) {
         const has = globalPosts.some(p => { const dt = new Date(p.created_at); return dt.getDate() === d && dt.getMonth() === m && dt.getFullYear() === y; });
-        h += `<div onclick="filterD(${y},${m},${d})" style="height:50px; display:flex; justify-content:center; align-items:center; font-size:14px; font-weight:800; border-radius:15px; cursor:pointer; ${has?'background:#fff1f2; color:#ff4d6d; border:1px solid #ff4d6d;':'background:white; border:1px solid #eee;'}">${d}</div>`;
+        h += `<div onclick="filterD(${y},${m},${d})" style="height:50px; display:flex; flex-direction:column; justify-content:center; align-items:center; font-size:14px; font-weight:800; border-radius:15px; cursor:pointer; ${has?'background:#fff1f2; color:var(--accent); border:1.5px solid var(--accent);':'background:#fff; border:1px solid #eee;'}">${d}</div>`;
     }
     view.innerHTML = h + `</div>`;
 }
 function chM(v) { calendarDate.setMonth(calendarDate.getMonth() + v); renderCalendar(); }
-function filterD(y, m, d) { calendarMode = false; document.getElementById("viewArea").innerHTML = `<div style="padding:20px 25px; font-weight:900; font-size:18px; color:#ff4d6d">📍 ${y}.${m+1}.${d}의 기록</div>`; const filtered = globalPosts.filter(p => { const dt = new Date(p.created_at); return dt.getDate() === d && dt.getMonth() === m && dt.getFullYear() === y; }); const feed = document.getElementById("feed"); feed.innerHTML = ""; filtered.forEach(p => renderCard(p, feed)); new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } }); }
+function filterD(y, m, d) { 
+    calendarMode = false; 
+    document.getElementById("viewArea").innerHTML = `<div style="padding:20px 25px; font-weight:900; font-size:20px; color:var(--main)">📍 ${y}.${m+1}.${d}의 조각들</div>`;
+    const filtered = globalPosts.filter(p => { const dt = new Date(p.created_at); return dt.getDate() === d && dt.getMonth() === m && dt.getFullYear() === y; });
+    const feed = document.getElementById("feed"); feed.innerHTML = "";
+    filtered.length ? filtered.forEach(p => renderCard(p, feed)) : feed.innerHTML="<p style='text-align:center; padding:50px; opacity:0.3;'>이날은 기록된 추억이 없어요.</p>";
+    new Swiper('.swiper', { pagination: { el: '.swiper-pagination' } });
+}
+
+function changeTheme(tag, btn) {
+    currentTag = tag;
+    document.querySelectorAll(".tag-btn").forEach(b => { b.classList.remove("active"); b.style.background="#fff"; b.style.color="#78716c"; b.style.borderColor="#eee"; });
+    btn.classList.add("active"); btn.style.background = btn.getAttribute("data-color"); btn.style.color="#fff"; btn.style.borderColor="transparent";
+    renderMain();
+}
+
 function showFortune() {
-    const user = document.getElementById("username").value; if(!user) return alert("누구신가요?");
-    const list = ["📸 오늘 사진 찍으면 무조건 레전드!", "💘 오늘은 솔직해져도 좋은 날!", "🤫 비밀을 지키면 큰 복이 옵니다.", "🔥 네 글이 오늘 최고의 인기글!", "✨ 생각지도 못한 행운이 찾아옵니다."];
-    const seed = user + new Date().toDateString();
+    const user = document.getElementById("username").value;
+    if(!user) return alert("누구신가요? 먼저 이름을 선택해주세요! 🔮");
+    const list = ["📸 오늘 사진 찍으면 무조건 레전드!", "💘 오늘은 솔직해져도 좋은 날이에요.", "🤫 비밀을 지키면 큰 복이 옵니다.", "🔥 네가 올린 글이 오늘 최고의 인기글!", "✨ 생각지도 못한 행운이 찾아옵니다.", "💸 지갑을 잘 챙기세요, 소소한 지출 주의!", "🍣 오늘 맛있는 거 먹을 복이 터졌네요!", "🎁 누군가 너를 위해 작은 선물을 준비 중!", "🏃 운동하면 컨디션이 수직 상승!", "😴 오늘은 일찍 잘수록 내일 행운이 커져요."];
+    const seed = user + new Date().getFullYear() + (new Date().getMonth()+1) + new Date().getDate();
     let hash = 0; for(let i=0; i<seed.length; i++) hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-    alert(`🍀 ${user}님의 운세: ${list[Math.abs(hash)%list.length]}`);
+    alert(`🍀 ${user}님의 오늘 운세\n\n"${list[Math.abs(hash)%list.length]}"\n\n(매일 자정에 새로운 운세가 찾아옵니다!)`);
 }
 </script>
 </body>
