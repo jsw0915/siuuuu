@@ -23,7 +23,7 @@
         .tag-btn.active { color: white !important; transform: scale(1.05); }
         .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         
-        /* 추가된 스타일 */
+        /* 추가 기능용 스타일 */
         .post-menu { position: absolute; top: 15px; right: 15px; z-index: 10; display: flex; gap: 5px; }
         .menu-btn { background: rgba(255,255,255,0.7); border: none; padding: 5px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; backdrop-filter: blur(4px); }
         .like-badge { position: absolute; bottom: 15px; right: 15px; background: rgba(255,255,255,0.8); padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: 900; color: #fb7185; pointer-events: none; }
@@ -89,6 +89,7 @@
             <button onclick="runLucky()" style="flex: 0.6; background: #10b981; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">🍀</button>
         </div>
     </div>
+
     <div id="feed"></div>
 </div>
 
@@ -185,14 +186,48 @@
 
     async function addComment(pId) { const i = document.getElementById(`cIn-${pId}`), c = i.value.trim(); if(!c) return; await client.from('comments').insert([{ post_id: pId, content: c, user_name: localStorage.getItem('siu_user') }]); i.value=""; loadFeed(); }
     async function deleteComment(id) { if(confirm("삭제?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
+    
     function changeTheme(tag, btn) {
         document.body.style.backgroundColor = btn.dataset.bg; document.getElementById('mainTitle').style.color = btn.dataset.color;
         document.querySelectorAll('.tag-btn').forEach(b => { b.classList.remove('active'); b.style.backgroundColor = 'white'; b.style.color = 'var(--text)'; });
         btn.classList.add('active'); btn.style.backgroundColor = btn.dataset.color; btn.style.color = 'white'; loadFeed(tag);
     }
+
     function openDateEditor(d) { selDate = d; document.getElementById('dateEditor').style.display = 'block'; document.getElementById('selectedDateText').innerText = `📅 ${d}`; const mine = allSchedules.filter(s => s.target_date === d); document.getElementById('existingEvents').innerHTML = mine.map(s => `<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${s.title}</span><button onclick="deleteSchedule('${s.id}')" style="color:red; border:none; background:none;">✕</button></div>`).join(''); }
     async function saveDateEvent() { const t = document.getElementById('dateInput').value; if(!t) return; await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate }]); document.getElementById('dateInput').value=""; renderCalendar(); }
-    async function savePost() { const c = document.getElementById('pContent').value, f = document.getElementById('pFile').files; if(!c) return; document.getElementById('sBtn').innerText = "저장 중..."; let urls = []; for(let file of f) { const fn = `${Date.now()}_${file.name}`; await client.storage.from('photos').upload(fn, file); urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl); } await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]); location.reload(); }
+    
+    // 업로드 로직 개선 (location.reload 대신 loadFeed 사용)
+    async function savePost() {
+        const c = document.getElementById('pContent').value;
+        const f = document.getElementById('pFile').files;
+        if(!c) return;
+        
+        const sBtn = document.getElementById('sBtn');
+        sBtn.innerText = "저장 중...";
+        sBtn.disabled = true;
+
+        try {
+            let urls = [];
+            for(let file of f) {
+                const fn = `${Date.now()}_${file.name}`;
+                await client.storage.from('photos').upload(fn, file);
+                urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl);
+            }
+            await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
+            
+            // 입력창 초기화 및 리로드
+            document.getElementById('pContent').value = "";
+            document.getElementById('pFile').value = "";
+            document.getElementById('fLab').innerText = "사진 추가";
+            loadFeed(); 
+        } catch(e) {
+            alert("저장 실패!");
+        } finally {
+            sBtn.innerText = "기억 저장";
+            sBtn.disabled = false;
+        }
+    }
+
     async function deleteSchedule(id) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; }
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
     function runLucky() {
