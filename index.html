@@ -22,6 +22,8 @@
         .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
         .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .post-manage-btns { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 10; }
+        .m-btn { background: rgba(255,255,255,0.8); border: none; padding: 5px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; font-weight: bold; color: #666; }
     </style>
 </head>
 <body>
@@ -146,6 +148,7 @@
 
     async function loadFeed(filter = 'all') {
         const feedDiv = document.getElementById('feed');
+        const currentUser = localStorage.getItem('siu_user');
         let { data: posts, error } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
         if (error) { console.error(error); return; }
         posts = posts || [];
@@ -155,12 +158,18 @@
         }
         feedDiv.innerHTML = posts.map(p => `
             <div class="post-card">
+                ${p.user_name === currentUser ? `
+                    <div class="post-manage-btns">
+                        <button class="m-btn" onclick="editPost('${p.id}', \`${p.content.replace(/`/g, '\\`')}\`)">수정</button>
+                        <button class="m-btn" onclick="deletePost('${p.id}')">삭제</button>
+                    </div>
+                ` : ''}
                 <div class="image-slider">${(p.image_url||'').split(',').filter(u=>u).map(u => `<img src="${u}">`).join('')}</div>
                 <div style="padding:25px;">
                     <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
-                    <p style="font-size:16px; margin:10px 0 20px; line-height:1.7;">${p.content}</p>
+                    <p id="content-${p.id}" style="font-size:16px; margin:10px 0 20px; line-height:1.7; white-space:pre-wrap;">${p.content}</p>
                     <div id="comments-${p.id}" style="border-top:1px solid #eee; padding-top:15px;">
-                        ${(p.comments || []).map(c => `<div class="comment-item"><span><b>${c.user_name}</b> ${c.content}</span>${c.user_name === localStorage.getItem('siu_user') ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">✕</small>` : ''}</div>`).join('')}
+                        ${(p.comments || []).map(c => `<div class="comment-item"><span><b>${c.user_name}</b> ${c.content}</span>${c.user_name === currentUser ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">✕</small>` : ''}</div>`).join('')}
                     </div>
                     <div style="display:flex; gap:10px; background:#f8fafc; padding:5px 12px; border-radius:12px; margin-top:10px;">
                         <input type="text" placeholder="댓글..." id="cIn-${p.id}" onkeydown="if(event.key==='Enter') addComment('${p.id}')" style="flex:1; border:none; outline:none; background:none; font-size:14px;">
@@ -168,6 +177,24 @@
                     </div>
                 </div>
             </div>`).join('');
+    }
+
+    // 게시물 수정 기능
+    async function editPost(id, oldContent) {
+        const newContent = prompt("내용을 수정하세요:", oldContent);
+        if (newContent === null || newContent.trim() === oldContent) return;
+        
+        const { error } = await client.from('posts').update({ content: newContent }).eq('id', id);
+        if (error) alert("수정 실패: " + error.message);
+        else loadFeed();
+    }
+
+    // 게시물 삭제 기능
+    async function deletePost(id) {
+        if (!confirm("정말 이 기록을 지울까요? 사진은 삭제되지 않습니다.")) return;
+        const { error } = await client.from('posts').delete().eq('id', id);
+        if (error) alert("삭제 실패: " + error.message);
+        else loadFeed();
     }
 
     async function savePost() {
@@ -192,7 +219,10 @@
             const { error: insErr } = await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: user }]);
             if(insErr) throw insErr;
             alert("기억 저장 완료! 🔥");
-            location.reload();
+            document.getElementById('pContent').value = "";
+            document.getElementById('pFile').value = "";
+            document.getElementById('fLab').innerText = "사진 추가";
+            loadFeed();
         } catch(e) {
             alert("실패: " + e.message);
         } finally {
@@ -209,7 +239,7 @@
         loadFeed(); 
     }
     
-    async function deleteComment(id) { if(confirm("삭제?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
+    async function deleteComment(id) { if(confirm("댓글을 삭제할까요?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
     
     function changeTheme(tag, btn) {
         document.body.style.backgroundColor = btn.dataset.bg; 
@@ -241,7 +271,7 @@
         renderCalendar(); 
     }
     
-    async function deleteSchedule(id) { if(confirm("삭제할까요?")) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; } }
+    async function deleteSchedule(id) { if(confirm("일정을 삭제할까요?")) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; } }
     
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
 
