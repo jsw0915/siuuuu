@@ -17,40 +17,28 @@
         }
         body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
         
-        /* 스크롤바 숨기기 및 가로 스크롤 */
-        .scroll-container { 
-            display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; 
-            -ms-overflow-style: none; padding: 10px 20px; cursor: grab;
-        }
+        .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; padding: 10px 20px; }
         .scroll-container::-webkit-scrollbar { display: none; }
 
         .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
         .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; scrollbar-width: none; }
-        .image-slider::-webkit-scrollbar { display: none; }
         .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
         
-        /* 캘린더 디자인 (초록색 강조형) */
-        .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; position: relative; transition: 0.2s; }
-        .cal-day:hover { background: #fafaf9; }
-        .ev-h { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 65px; scrollbar-width: none; }
+        /* 캘린더 디자인 */
+        .cal-day { height: 100px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; position: relative; }
+        .ev-h { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; overflow-y: auto; max-height: 70px; scrollbar-width: none; }
         
-        /* 일정 라벨 스타일 */
-        .day-label { font-size: 9px; padding: 3px 5px; border-radius: 4px; color: white; display: block; font-weight: bold; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-        .label-green { background: var(--green); }
-        .label-pink { background: var(--pink); }
-        .label-blue { background: var(--blue); }
+        /* 핵심 수정: 일정 라벨 색상 강제 적용 */
+        .day-label { font-size: 10px; padding: 4px 6px; border-radius: 6px; color: white !important; display: block; font-weight: 800; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .label-green { background: var(--green) !important; } /* 일반 일정 */
+        .label-pink { background: var(--pink) !important; }   /* 기념일/생일 */
         
-        /* 하트 애니메이션 */
         .heart-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: white; font-size: 80px; transition: 0.4s; pointer-events: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.3); }
         .heart-overlay.active { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
         
-        /* 입력 및 버튼 */
-        textarea { width: 100%; min-height: 180px; border: none; background: #f8fafc; border-radius: 20px; padding: 25px; font-size: 16px; outline: none; resize: none; box-sizing: border-box; line-height: 1.6; }
-        .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        textarea { width: 100%; min-height: 180px; border: none; background: #f8fafc; border-radius: 20px; padding: 25px; font-size: 16px; outline: none; resize: none; box-sizing: border-box; }
+        .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
-
-        .memory-timeline { margin: 20px 15px; padding: 25px; background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%); border-radius: 30px; border: 2px dashed #eab308; }
-        .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
     </style>
 </head>
 <body>
@@ -120,9 +108,16 @@
 </div>
 
 <script>
-    const ANNIVERSARIES = { "01-01": "신정 ☀️", "03-01": "삼일절 🇰🇷", "05-05": "어린이날 🎈", "05-08": "어버이날 💐", "05-15": "스승의날 🍎", "06-06": "현충일 🇰🇷", "08-15": "광복절 🇰🇷", "10-03": "개천절 🇰🇷", "10-09": "한글날 📖", "12-25": "크리스마스 🎄" };
-    const FORTUNES = ["오늘의 SIUUU! 지수 100%", "맛있는 걸 먹으면 행운이 옵니다.", "멤버 중 누군가 당신을 생각하고 있어요.", "오늘은 모든 일이 술술 풀릴 거예요."];
-    for(let i=0; i<50; i++) FORTUNES.push(`행운지수 ${Math.floor(Math.random()*40+60)}%! 가즈아!`);
+    // [추가] 기념일 리스트 보강
+    const ANNIVERSARIES = { 
+        "01-01": "신정 ☀️", "02-14": "발렌타인데이 🍫", "03-01": "삼일절 🇰🇷", "03-14": "화이트데이 🍭",
+        "04-14": "블랙데이 🍜", "05-05": "어린이날 🎈", "05-08": "어버이날 💐", "05-14": "로즈데이 🌹",
+        "05-15": "스승의날 🍎", "06-06": "현충일 🇰🇷", "08-15": "광복절 🇰🇷", "10-03": "개천절 🇰🇷",
+        "10-09": "한글날 📖", "11-11": "빼빼로데이 🥢", "12-25": "크리스마스 🎄" 
+    };
+    
+    const FORTUNES = ["오늘의 SIUUU! 지수 100%", "맛있는 걸 먹으면 행운이 옵니다.", "오늘은 모든 일이 술술 풀릴 거예요."];
+    for(let i=0; i<30; i++) FORTUNES.push(`행운지수 ${Math.floor(Math.random()*40+60)}%! 가즈아!`);
 
     const SQUAD_COLORS = { '태지아': '#ff4d6d', '조성우': '#007bff', '염태성': '#20c997', '김태현': '#9b5de5', '이준서': '#f15bb5', '이지호': '#d4a373', '이다원': '#7b2cbf', '추억': '#38bdf8', '생일': '#fb7185' };
     const SQUAD = Object.keys(SQUAD_COLORS);
@@ -133,10 +128,6 @@
     window.onload = function() {
         client = supabase.createClient(SB_URL, SB_KEY);
         if (localStorage.getItem('siu_user')) { showApp(); }
-        document.addEventListener('wheel', (e) => {
-            const el = e.target.closest('.scroll-container, .image-slider');
-            if (el && e.deltaY !== 0) { e.preventDefault(); el.scrollLeft += e.deltaY; }
-        }, { passive: false });
     };
 
     function handleLogin() {
@@ -166,11 +157,15 @@
                 else {
                     const mmdd = `${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
                     const dKey = `${y}-${mmdd}`;
+                    
+                    // 1. 시스템 기념일 (분홍색)
                     let evHtml = ANNIVERSARIES[mmdd] ? `<span class="day-label label-pink">${ANNIVERSARIES[mmdd]}</span>` : '';
                     
+                    // 2. 사용자 일정
                     const dayEvents = allSchedules.filter(s => s.target_date === dKey);
                     evHtml += dayEvents.map(ev => {
-                        const isPink = ev.title.includes('생일') || ev.title.includes('기념일') || ev.type === '#생일';
+                        // 제목에 생일, 기념일, Day가 들어가면 분홍색, 아니면 초록색
+                        const isPink = ev.title.includes('생일') || ev.title.includes('기념일') || ev.title.includes('Day');
                         const cls = isPink ? 'label-pink' : 'label-green';
                         return `<span class="day-label ${cls}" style="margin-top:2px;">${ev.title}</span>`;
                     }).join('');
@@ -189,66 +184,16 @@
         const feedDiv = document.getElementById('feed');
         let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
         posts = posts || [];
-
-        let timelineHtml = "";
-        const todayStr = new Date().toISOString().slice(5, 10);
-        const mem = posts.filter(p => p.created_at.slice(5, 10) === todayStr && new Date(p.created_at).getFullYear() < new Date().getFullYear());
-        if (mem.length > 0 && filter === 'all') {
-            timelineHtml = `<div class="memory-timeline"><h3 style="margin:0; font-size:14px; color:#a16207;">⏳ 1년 전 오늘: ${mem[0].content.substring(0,40)}...</h3></div>`;
-        }
-
-        if(filter !== 'all') {
-            if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
-            else posts = posts.filter(p => p.user_name === filter);
-        }
-
-        feedDiv.innerHTML = timelineHtml + posts.map(p => `
+        feedDiv.innerHTML = posts.map(p => `
             <div class="post-card">
-                <div class="heart-overlay" id="heart-${p.id}">❤️</div>
-                <div class="image-slider" ondblclick="handleDoubleTap('${p.id}')">
+                <div class="image-slider">
                     ${(p.image_url||'').split(',').map(u => `<img src="${u}">`).join('')}
                 </div>
                 <div style="padding:25px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                         <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
-                         ${p.user_name === localStorage.getItem('siu_user') ? `<span onclick="editPost('${p.id}', \`${p.content}\`)" style="opacity:0.3; font-size:12px; cursor:pointer;">수정/삭제</span>` : ''}
-                    </div>
-                    <p style="font-size:16px; margin:0 0 20px; line-height:1.7; white-space:pre-wrap;">${p.content}</p>
-                    <div style="border-top:1px solid #f1f5f9; padding-top:15px;">
-                        <div id="comments-${p.id}">${(p.comments || []).map(c => `
-                            <div class="comment-item">
-                                <span><b>${c.user_name}</b> ${c.content}</span>
-                                ${c.user_name === localStorage.getItem('siu_user') ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">✕</small>` : ''}
-                            </div>
-                        `).join('')}</div>
-                        <div style="display:flex; gap:10px; background:#f8fafc; padding:5px 12px; border-radius:12px;">
-                            <input type="text" placeholder="댓글..." id="cIn-${p.id}" onkeydown="if(event.key==='Enter') addComment('${p.id}')" style="flex:1; border:none; outline:none; background:none; font-size:14px; padding:8px 0;">
-                            <button onclick="addComment('${p.id}')" style="border:none; background:none; color:#eab308; font-weight:bold;">UP</button>
-                        </div>
-                    </div>
+                    <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
+                    <p style="font-size:16px; margin:10px 0 20px; line-height:1.7;">${p.content}</p>
                 </div>
             </div>`).join('');
-    }
-
-    async function handleDoubleTap(id) { const h = document.getElementById(`heart-${id}`); h.classList.add('active'); setTimeout(() => h.classList.remove('active'), 800); }
-    async function addComment(pId) { const i = document.getElementById(`cIn-${pId}`); const c = i.value.trim(); if(!c) return; await client.from('comments').insert([{ post_id: pId, content: c, user_name: localStorage.getItem('siu_user') }]); i.value=""; loadFeed(); }
-    async function deleteComment(id) { if(confirm("삭제?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
-    async function editPost(id, old) { const s = prompt("1:수정, 2:삭제", "1"); if(s==="1") { const n = prompt("수정", old); if(n) { await client.from('posts').update({content:n}).eq('id', id); loadFeed(); } } else if(s==="2") { if(confirm("삭제?")) { await client.from('posts').delete().eq('id', id); loadFeed(); } } }
-
-    async function savePost() {
-        const c = document.getElementById('pContent').value; if(!c) return;
-        const btn = document.getElementById('sBtn'); btn.innerText = "저장 중..."; btn.disabled = true;
-        const files = document.getElementById('pFile').files;
-        let urls = [];
-        try {
-            for(let f of files) {
-                const fn = `${Date.now()}_${f.name}`;
-                await client.storage.from('photos').upload(fn, f);
-                urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl);
-            }
-            await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
-            location.reload();
-        } catch(e) { alert("실패"); btn.innerText = "기억 저장"; btn.disabled = false; }
     }
 
     function openDateEditor(d) {
@@ -256,29 +201,22 @@
         document.getElementById('selectedDateText').innerText = `📅 ${d} 일정`;
         const mine = allSchedules.filter(s => s.target_date === d);
         document.getElementById('existingEvents').innerHTML = mine.map(s => `
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #eee;">
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
                 <span>${s.title}</span><button onclick="deleteSchedule('${s.id}')" style="color:red; border:none; background:none;">✕</button>
             </div>`).join('');
     }
 
     async function saveDateEvent() {
         const t = document.getElementById('dateInput').value; if(!t) return;
-        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate, type: (t.includes('생일')||t.includes('기념일'))?'#생일':'#일정' }]);
+        // Supabase에 저장
+        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate }]);
         document.getElementById('dateInput').value=""; renderCalendar();
     }
 
     async function deleteSchedule(id) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; }
-    function changeTheme(tag, btn) {
-        const color = btn.getAttribute('data-color'), bg = btn.getAttribute('data-bg');
-        document.body.style.backgroundColor = bg;
-        document.getElementById('mainTitle').style.color = color;
-        document.querySelectorAll('.tag-btn').forEach(b => { b.classList.remove('active'); b.style.backgroundColor = 'white'; b.style.color = 'var(--text)'; });
-        btn.classList.add('active'); btn.style.backgroundColor = color; btn.style.color = 'white';
-        loadFeed(tag);
-    }
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
-    function updateFileStatus(i) { document.getElementById('fLab').innerText = `📸 ${i.files.length}장 선택됨`; }
     function runLucky() { alert(`🍀 운세: ${FORTUNES[Math.floor(Math.random()*FORTUNES.length)]}`); }
+    function updateFileStatus(i) { document.getElementById('fLab').innerText = `📸 ${i.files.length}장 선택됨`; }
 </script>
 </body>
 </html>
