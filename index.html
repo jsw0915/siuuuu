@@ -12,8 +12,8 @@
         .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; padding: 10px 20px; -webkit-overflow-scrolling: touch; cursor: grab; }
         .scroll-container::-webkit-scrollbar { display: none; }
         .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
-        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; scrollbar-width: none; position: relative; }
-        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; cursor: pointer; }
+        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; scrollbar-width: none; }
+        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
         .cal-day { height: 100px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; position: relative; }
         .ev-h { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; overflow-y: auto; max-height: 70px; scrollbar-width: none; }
         .day-label { font-size: 10px; padding: 4px 6px; border-radius: 6px; color: white !important; display: block; font-weight: 800; text-align: center; white-space: nowrap; overflow: hidden; }
@@ -22,12 +22,10 @@
         .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
         .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .post-menu { position: absolute; top: 15px; right: 15px; z-index: 10; display: flex; gap: 5px; }
-        .menu-btn { background: rgba(255,255,255,0.7); border: none; padding: 5px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; backdrop-filter: blur(4px); }
-        .like-badge { position: absolute; bottom: 15px; right: 15px; background: rgba(255,255,255,0.8); padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: 900; color: #fb7185; pointer-events: none; }
     </style>
 </head>
 <body>
+
 <div id="gate" style="display: flex; position: fixed; inset: 0; z-index: 9999; background: #fdfbf7; flex-direction: column; align-items: center; justify-content: center;">
     <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic;">SIUUUU!</h1>
     <div style="width: 300px; margin-top: 30px;">
@@ -87,6 +85,7 @@
             <button onclick="runLucky()" style="flex: 0.6; background: #10b981; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">🍀</button>
         </div>
     </div>
+
     <div id="feed"></div>
 </div>
 
@@ -101,11 +100,22 @@
         client = supabase.createClient(SB_URL, SB_KEY); 
         if (localStorage.getItem('siu_user')) showApp(); 
         const sc = document.getElementById('categoryScroll');
-        if(sc) sc.addEventListener('wheel', (e) => { e.preventDefault(); sc.scrollLeft += e.deltaY; });
+        sc.addEventListener('wheel', (e) => { e.preventDefault(); sc.scrollLeft += e.deltaY; });
     };
 
-    function handleLogin() { const n = document.getElementById('userName').value.trim(); if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); } else alert("멤버가 아닙니다!"); }
-    function showApp() { document.getElementById('gate').style.display = 'none'; document.getElementById('app').style.display = 'block'; renderCalendar(); loadFeed(); }
+    function handleLogin() { 
+        const n = document.getElementById('userName').value.trim(); 
+        if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); } 
+        else alert("멤버가 아닙니다!"); 
+    }
+    
+    function showApp() { 
+        document.getElementById('gate').style.display = 'none'; 
+        document.getElementById('app').style.display = 'block'; 
+        renderCalendar(); 
+        loadFeed(); 
+    }
+    
     function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
 
     async function renderCalendar() {
@@ -113,7 +123,9 @@
         document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
         const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
         const body = document.getElementById('calBody');
-        const { data } = await client.from('schedules').select('*'); allSchedules = data || []; body.innerHTML = '';
+        const { data } = await client.from('schedules').select('*'); 
+        allSchedules = data || []; 
+        body.innerHTML = '';
         let date = 1;
         for (let i = 0; i < 6; i++) {
             let row = document.createElement('tr');
@@ -125,7 +137,8 @@
                     ev += allSchedules.filter(s => s.target_date === dKey).map(s => `<span class="day-label ${s.title.match(/생일|기념일|Day/) ? 'label-pink' : 'label-green'}" style="margin-top:2px;">${s.title}</span>`).join('');
                     cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h">${ev}</div>`;
                     cell.onclick = () => openDateEditor(dKey); date++;
-                } row.appendChild(cell);
+                }
+                row.appendChild(cell);
             }
             body.appendChild(row); if (date > last) break;
         }
@@ -133,101 +146,117 @@
 
     async function loadFeed(filter = 'all') {
         const feedDiv = document.getElementById('feed');
-        const currentUser = localStorage.getItem('siu_user');
-        let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
+        let { data: posts, error } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
+        if (error) { console.error(error); return; }
         posts = posts || [];
-        if(filter !== 'all') posts = (['추억','생일'].includes(filter)) ? posts.filter(p => p.content && p.content.includes(filter)) : posts.filter(p => p.user_name === filter);
-        
-        feedDiv.innerHTML = posts.map(p => {
-            const likedUsers = p.liked_users || "";
-            const isLiked = likedUsers.split(',').includes(currentUser);
-            const pLikes = p.likes || 0;
-            return `
+        if(filter !== 'all') {
+            if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
+            else posts = posts.filter(p => p.user_name === filter);
+        }
+        feedDiv.innerHTML = posts.map(p => `
             <div class="post-card">
-                ${p.user_name === currentUser ? `
-                <div class="post-menu">
-                    <button class="menu-btn" onclick="editPost('${p.id}', \`${p.content}\`)">수정</button>
-                    <button class="menu-btn" style="color:red;" onclick="deletePost('${p.id}')">삭제</button>
-                </div>` : ''}
-                <div class="image-slider" ondblclick="handleLike('${p.id}', '${likedUsers}', ${pLikes})">
-                    ${(p.image_url||'').split(',').filter(u=>u).map(u => `<img src="${u}">`).join('')}
-                    <div class="like-badge">${isLiked ? '❤️' : '🤍'} ${pLikes}</div>
-                </div>
+                <div class="image-slider">${(p.image_url||'').split(',').filter(u=>u).map(u => `<img src="${u}">`).join('')}</div>
                 <div style="padding:25px;">
-                    <b style="color:${SQUAD_COLORS[p.user_name] || '#eab308'}">BY ${p.user_name}</b>
+                    <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
                     <p style="font-size:16px; margin:10px 0 20px; line-height:1.7;">${p.content}</p>
                     <div id="comments-${p.id}" style="border-top:1px solid #eee; padding-top:15px;">
-                        ${(p.comments || []).map(c => `<div class="comment-item"><span><b>${c.user_name}</b> ${c.content}</span>${c.user_name === currentUser ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">✕</small>` : ''}</div>`).join('')}
+                        ${(p.comments || []).map(c => `<div class="comment-item"><span><b>${c.user_name}</b> ${c.content}</span>${c.user_name === localStorage.getItem('siu_user') ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">✕</small>` : ''}</div>`).join('')}
                     </div>
                     <div style="display:flex; gap:10px; background:#f8fafc; padding:5px 12px; border-radius:12px; margin-top:10px;">
                         <input type="text" placeholder="댓글..." id="cIn-${p.id}" onkeydown="if(event.key==='Enter') addComment('${p.id}')" style="flex:1; border:none; outline:none; background:none; font-size:14px;">
                         <button onclick="addComment('${p.id}')" style="border:none; background:none; color:#eab308; font-weight:bold;">UP</button>
                     </div>
                 </div>
-            </div>`;
-        }).join('');
+            </div>`).join('');
     }
 
-    async function handleLike(postId, likedUsers, currentLikes) {
-        const user = localStorage.getItem('siu_user');
-        let userArr = likedUsers ? likedUsers.split(',').filter(u => u !== "") : [];
-        let newLikes = currentLikes;
-        if (userArr.includes(user)) { userArr = userArr.filter(u => u !== user); newLikes = Math.max(0, currentLikes - 1); }
-        else { userArr.push(user); newLikes = currentLikes + 1; }
-        await client.from('posts').update({ likes: newLikes, liked_users: userArr.join(',') }).eq('id', postId); loadFeed();
-    }
-
-    async function deletePost(postId) { if (confirm("정말 삭제하시겠습니까?")) { await client.from('posts').delete().eq('id', postId); loadFeed(); } }
-    async function editPost(postId, oldContent) {
-        const newContent = prompt("내용을 수정해주세요:", oldContent);
-        if (newContent && newContent !== oldContent) { await client.from('posts').update({ content: newContent }).eq('id', postId); loadFeed(); }
-    }
-
-    async function addComment(pId) { const i = document.getElementById(`cIn-${pId}`), c = i.value.trim(); if(!c) return; await client.from('comments').insert([{ post_id: pId, content: c, user_name: localStorage.getItem('siu_user') }]); i.value=""; loadFeed(); }
-    async function deleteComment(id) { if(confirm("삭제?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
-    
-    function changeTheme(tag, btn) {
-        document.body.style.backgroundColor = btn.dataset.bg; document.getElementById('mainTitle').style.color = btn.dataset.color;
-        document.querySelectorAll('.tag-btn').forEach(b => { b.classList.remove('active'); b.style.backgroundColor = 'white'; b.style.color = 'var(--text)'; });
-        btn.classList.add('active'); btn.style.backgroundColor = btn.dataset.color; btn.style.color = 'white'; loadFeed(tag);
-    }
-
-    function openDateEditor(d) { selDate = d; document.getElementById('dateEditor').style.display = 'block'; document.getElementById('selectedDateText').innerText = `📅 ${d}`; const mine = allSchedules.filter(s => s.target_date === d); document.getElementById('existingEvents').innerHTML = mine.map(s => `<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${s.title}</span><button onclick="deleteSchedule('${s.id}')" style="color:red; border:none; background:none;">✕</button></div>`).join(''); }
-    async function saveDateEvent() { const t = document.getElementById('dateInput').value; if(!t) return; await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate }]); document.getElementById('dateInput').value=""; renderCalendar(); }
-    
     async function savePost() {
         const c = document.getElementById('pContent').value;
         const f = document.getElementById('pFile').files;
-        if(!c) return alert("내용을 입력해주세요!");
-        const sBtn = document.getElementById('sBtn');
-        sBtn.innerText = "저장 중...";
-        sBtn.disabled = true;
+        const user = localStorage.getItem('siu_user');
+        if(!c && f.length === 0) return alert("내용을 입력하세요!");
+        
+        const btn = document.getElementById('sBtn');
+        btn.innerText = "저장 중...";
+        btn.disabled = true;
+
         try {
             let urls = [];
             for(let file of f) {
                 const fn = `${Date.now()}_${file.name}`;
-                await client.storage.from('photos').upload(fn, file);
-                urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl);
+                const { error: upErr } = await client.storage.from('photos').upload(fn, file);
+                if(upErr) throw upErr;
+                const { data } = client.storage.from('photos').getPublicUrl(fn);
+                if(data) urls.push(data.publicUrl);
             }
-            await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user'), likes: 0, liked_users: "" }]);
-            document.getElementById('pContent').value = "";
-            document.getElementById('pFile').value = "";
-            document.getElementById('fLab').innerText = "사진 추가";
-            loadFeed(); 
-        } catch(e) { alert("저장 실패!"); } finally { sBtn.innerText = "기억 저장"; sBtn.disabled = false; }
+            const { error: insErr } = await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: user }]);
+            if(insErr) throw insErr;
+            alert("기억 저장 완료! 🔥");
+            location.reload();
+        } catch(e) {
+            alert("실패: " + e.message);
+        } finally {
+            btn.innerText = "기억 저장";
+            btn.disabled = false;
+        }
     }
 
-    async function deleteSchedule(id) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; }
+    async function addComment(pId) { 
+        const i = document.getElementById(`cIn-${pId}`), c = i.value.trim(); 
+        if(!c) return; 
+        await client.from('comments').insert([{ post_id: pId, content: c, user_name: localStorage.getItem('siu_user') }]); 
+        i.value=""; 
+        loadFeed(); 
+    }
+    
+    async function deleteComment(id) { if(confirm("삭제?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
+    
+    function changeTheme(tag, btn) {
+        document.body.style.backgroundColor = btn.dataset.bg; 
+        document.getElementById('mainTitle').style.color = btn.dataset.color;
+        document.querySelectorAll('.tag-btn').forEach(b => { 
+            b.classList.remove('active'); 
+            b.style.backgroundColor = 'white'; 
+            b.style.color = 'var(--text)'; 
+        });
+        btn.classList.add('active'); 
+        btn.style.backgroundColor = btn.dataset.color; 
+        btn.style.color = 'white'; 
+        loadFeed(tag);
+    }
+    
+    function openDateEditor(d) { 
+        selDate = d; 
+        document.getElementById('dateEditor').style.display = 'block'; 
+        document.getElementById('selectedDateText').innerText = `📅 ${d}`; 
+        const mine = allSchedules.filter(s => s.target_date === d); 
+        document.getElementById('existingEvents').innerHTML = mine.map(s => `<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${s.title}</span><button onclick="deleteSchedule('${s.id}')" style="color:red; border:none; background:none;">✕</button></div>`).join(''); 
+    }
+    
+    async function saveDateEvent() { 
+        const t = document.getElementById('dateInput').value; 
+        if(!t) return; 
+        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate }]); 
+        document.getElementById('dateInput').value=""; 
+        renderCalendar(); 
+    }
+    
+    async function deleteSchedule(id) { if(confirm("삭제할까요?")) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; } }
+    
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
+
     function runLucky() {
         const user = localStorage.getItem('siu_user') || "guest";
         const today = new Date().toISOString().split('T')[0];
         const seed = user + today;
-        let hash = 0; for (let i = 0; i < seed.length; i++) { hash = ((hash << 5) - hash) + seed.charCodeAt(i); hash |= 0; }
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) { hash = ((hash << 5) - hash) + seed.charCodeAt(i); hash |= 0; }
         const score = Math.abs(hash % 41) + 60;
-        const msg = score >= 90 ? "대박! 오늘 인생샷 건지는 날! 🔥" : score >= 80 ? "운이 좋네요! 스쿼드에 기쁜 일이? 🚀" : score >= 70 ? "평온한 하루, 맛있는 거 드세요! 😊" : "무난한 하루, SIUUU 한 번 하고 힘내기! 🍀";
+        const msgs = ["대박! 오늘 인생샷 건지는 날! 🔥", "운이 좋네요! 스쿼드에 기쁜 일이? 🚀", "평온한 하루, 맛있는 거 드세요! 😊", "무난한 하루, SIUUU 한 번 하고 힘내기! 🍀"];
+        const msg = score >= 90 ? msgs[0] : score >= 80 ? msgs[1] : score >= 70 ? msgs[2] : msgs[3];
         alert(`🍀 [${user}] 오늘의 운세\n행운지수: ${score}%\n\n${msg}`);
     }
+    
     function updateFileStatus(i) { document.getElementById('fLab').innerText = `📸 ${i.files.length}장 선택됨`; }
 </script>
 </body>
