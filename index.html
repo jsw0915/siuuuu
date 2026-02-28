@@ -10,6 +10,7 @@
         :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; }
         body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
         
+        /* 스크롤 지원 */
         .scroll-container { 
             display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; 
             -ms-overflow-style: none; padding-bottom: 5px; cursor: grab;
@@ -21,19 +22,14 @@
         .image-slider::-webkit-scrollbar { display: none; }
         .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
         
-        .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; }
+        /* 캘린더 최적화 스타일 */
+        .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; position: relative; }
         .ev-h { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 60px; scrollbar-width: none; }
-        .ev-h::-webkit-scrollbar { display: none; }
         .day-label { font-size: 9px; padding: 3px 5px; border-radius: 4px; color: white; display: block; font-weight: bold; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; margin-bottom: 1px; }
         
         textarea { width: 100%; min-height: 180px; border: none; background: #f8fafc; border-radius: 20px; padding: 25px; font-size: 16px; outline: none; resize: none; box-sizing: border-box; line-height: 1.6; }
-        .heart-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: white; font-size: 80px; transition: 0.4s; pointer-events: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.3); }
-        .heart-overlay.active { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-        .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
-
-        /* 타임라인 스타일 */
         .memory-timeline { margin: 20px 15px; padding: 20px; background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%); border-radius: 25px; border: 2px dashed #eab308; }
     </style>
 </head>
@@ -103,14 +99,7 @@
 </div>
 
 <script>
-    const FORTUNES = [
-        "오늘은 SIUUUU!를 외칠 기막힌 일이 생깁니다.", "스쿼드 멤버 중 한 명에게 연락이 올지도?", "로또까지는 아니어도 편의점 2+1의 행운이!",
-        "오늘은 먹고 싶었던 음식을 꼭 드세요.", "태지아님이 당신의 운세를 축복합니다.", "성우님이 응원하는 하루, 백전백승!",
-        "준서님의 긍정 기운이 전달되었습니다.", "태현님의 지혜가 필요한 순간이 올 거예요.", "지호님의 섬세함으로 위기를 탈출합니다.",
-        "다원님의 에너지가 폭발하는 날!", "태성님의 뚝심이 빛을 발할 것입니다.", "오늘은 아무것도 안 해도 완벽한 하루입니다."
-    ];
-    for(let i=0; i<88; i++) FORTUNES.push(`행운지수 ${Math.floor(Math.random()*40+60)}%! 우리 스쿼드와 함께라면 무적입니다!`);
-
+    const FORTUNES = ["SIUUU! 행운 폭발!", "오늘은 먹고 싶었던 음식을 꼭 드세요.", "로또 5등의 기운이..?", "멤버들과의 즐거운 대화가 예상됩니다."];
     const SQUAD_COLORS = { '태지아': '#ff4d6d', '조성우': '#007bff', '염태성': '#20c997', '김태현': '#9b5de5', '이준서': '#f15bb5', '이지호': '#d4a373', '이다원': '#7b2cbf', '추억': '#38bdf8', '생일': '#fb7185' };
     const SQUAD = Object.keys(SQUAD_COLORS);
     const SB_URL = 'https://chlqufwjiwfiqzvmocof.supabase.co';
@@ -120,125 +109,47 @@
     window.onload = function() {
         client = supabase.createClient(SB_URL, SB_KEY);
         if (localStorage.getItem('siu_user')) { showApp(); }
-        initGlobalScroll();
+        
+        // 휠 스크롤 지원
+        document.addEventListener('wheel', (e) => {
+            const el = e.target.closest('.scroll-container, .image-slider');
+            if (el && e.deltaY !== 0) { e.preventDefault(); el.scrollLeft += e.deltaY; }
+        }, { passive: false });
     };
 
-    function initGlobalScroll() {
-        // 모든 스크롤 컨테이너에 휠 이벤트 연결
-        document.addEventListener('wheel', (e) => {
-            const container = e.target.closest('.scroll-container, .image-slider');
-            if (container) {
-                if (e.deltaY !== 0) {
-                    e.preventDefault();
-                    container.scrollLeft += e.deltaY;
-                }
-            }
-        }, { passive: false });
+    function showApp() { 
+        document.getElementById('gate').style.display = 'none'; 
+        document.getElementById('app').style.display = 'block'; 
+        renderCalendar(); 
+        loadFeed(); 
     }
 
-    function handleLogin() {
-        const n = document.getElementById('userName').value.trim();
-        if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); }
-        else { alert("스쿼드 멤버 이름을 입력하세요!"); }
-    }
-    function showApp() { document.getElementById('gate').style.display = 'none'; document.getElementById('app').style.display = 'block'; renderCalendar(); loadFeed(); }
-    function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
-
-    function getDDay(targetDate) {
-        const today = new Date(); today.setHours(0,0,0,0);
-        const target = new Date(targetDate); target.setHours(0,0,0,0);
-        const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
-        return diff === 0 ? "D-Day" : (diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`);
-    }
-
-    async function loadFeed(filter = 'all') {
-        const feedDiv = document.getElementById('feed');
-        feedDiv.innerHTML = '<p style="text-align:center; padding:100px 0; opacity:0.3;">추억을 불러오는 중...</p>';
-        
-        let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
-        if(!posts) posts = [];
-
-        // [추가] 1년 전 오늘 추억 소환 로직
-        let timelineHtml = "";
-        if (filter === 'all') {
-            const todayStr = new Date().toISOString().slice(5, 10); // "MM-DD"
-            const thisYear = new Date().getFullYear();
-            const memory = posts.filter(p => p.created_at.slice(5, 10) === todayStr && new Date(p.created_at).getFullYear() < thisYear);
-            
-            if (memory.length > 0) {
-                timelineHtml = `
-                    <div class="memory-timeline">
-                        <h3 style="margin:0 0 10px 0; font-size: 14px; color: #a16207;">⏳ 1년 전 오늘의 우리</h3>
-                        <div style="font-size: 13px; color: #854d0e; font-weight: bold;">"${memory[0].content.substring(0, 40)}..."</div>
-                        <small style="opacity: 0.6; font-size: 11px;">벌써 시간이 이렇게! 추억 돋네요 🔥</small>
-                    </div>`;
-            }
-        }
-
-        if(filter !== 'all') {
-            if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
-            else posts = posts.filter(p => p.user_name === filter);
-        }
-
-        const feedHtml = posts.map(p => {
-            const imgs = p.image_url ? p.image_url.split(',') : [];
-            return `
-                <div class="post-card">
-                    <div class="heart-overlay" id="heart-${p.id}">❤️</div>
-                    <div class="image-slider">
-                        ${imgs.map(url => `<img src="${url}">`).join('')}
-                    </div>
-                    <div style="padding:25px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
-                             <b style="color:${SQUAD_COLORS[p.user_name] || '#eab308'}">BY ${p.user_name}</b>
-                             ${p.user_name === localStorage.getItem('siu_user') ? `<span onclick="editPost('${p.id}', \`${p.content}\`)" style="opacity:0.3; font-size:12px; cursor:pointer; padding:5px;">수정/삭제</span>` : ''}
-                        </div>
-                        <p style="font-size:16px; margin:0 0 20px 0; line-height:1.7; white-space:pre-wrap;">${p.content}</p>
-                        <div style="border-top:1px solid #f1f5f9; padding-top:15px;">
-                            <div style="margin-bottom:12px;">${(p.comments || []).map(c => `
-                                <div class="comment-item">
-                                    <span><b>${c.user_name}</b> ${c.content}</span>
-                                    ${c.user_name === localStorage.getItem('siu_user') ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">지우기</small>` : ''}
-                                </div>
-                            `).join('')}</div>
-                            <input type="text" placeholder="우리들의 한마디..." onkeydown="if(event.key==='Enter') addComment('${p.id}', this.value)" style="width:100%; border:none; outline:none; font-size:14px; background:#f8fafc; padding:12px; border-radius:12px;">
-                        </div>
-                    </div>
-                </div>`;
-        }).join('');
-        feedDiv.innerHTML = timelineHtml + feedHtml;
-    }
-
-    // [개선] 캘린더 렌더링 + 데이터 표시 통합
+    // [최종 수정] 캘린더 렌더링 + 일정 표시 통합 로직
     async function renderCalendar() {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
         const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
-        const body = document.getElementById('calBody'); 
-        body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; opacity:0.5;">Loading...</td></tr>';
+        const body = document.getElementById('calBody');
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; opacity:0.3;">Syncing...</td></tr>';
         
-        // 데이터를 먼저 로드
+        // 1. 데이터를 먼저 로드
         const { data } = await client.from('schedules').select('*');
         allSchedules = data || [];
-        body.innerHTML = '';
 
+        // 2. 달력 그리기
+        body.innerHTML = '';
         let date = 1;
         for (let i = 0; i < 6; i++) {
             let row = document.createElement('tr');
             for (let j = 0; j < 7; j++) {
                 let cell = document.createElement('td'); cell.className = "cal-day";
-                if (i === 0 && j < first || date > last) { 
-                    cell.innerHTML = ""; 
-                } else {
+                if (i === 0 && j < first || date > last) { cell.innerHTML = ""; }
+                else {
                     const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
                     const dayEvents = allSchedules.filter(s => s.target_date === dKey);
-                    const eventLabels = dayEvents.map(ev => {
-                        const color = (ev.type === '#생일' || ev.title.includes('생일')) ? '#fb7185' : '#38bdf8';
-                        return `<span class="day-label" style="background:${color}">${ev.title}</span>`;
-                    }).join('');
-
-                    cell.setAttribute('data-date', dKey);
-                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h">${eventLabels}</div>`;
+                    const evHtml = dayEvents.map(ev => `<span class="day-label" style="background:${(ev.type==='#생일'||ev.title.includes('생일'))?'#fb7185':'#38bdf8'}">${ev.title}</span>`).join('');
+                    
+                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h">${evHtml}</div>`;
                     cell.onclick = () => openDateEditor(dKey);
                     date++;
                 }
@@ -248,37 +159,50 @@
         }
     }
 
-    async function handleDoubleTap(id) {
-        const heart = document.getElementById(`heart-${id}`);
-        heart.classList.add('active'); setTimeout(() => heart.classList.remove('active'), 800);
-    }
-
-    async function addComment(postId, content) {
-        if(!content) return;
-        await client.from('comments').insert([{ post_id: postId, content, user_name: localStorage.getItem('siu_user') }]);
-        loadFeed();
-    }
-
-    async function deleteComment(id) { if(confirm("댓글을 삭제할까요?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
-
-    async function editPost(id, oldContent) {
-        const choice = prompt("1: 내용 수정, 2: 게시물 삭제 (숫자 입력)", "1");
-        if (choice === "1") {
-            const newContent = prompt("내용 수정", oldContent);
-            if (newContent) { await client.from('posts').update({ content: newContent }).eq('id', id); loadFeed(); }
-        } else if (choice === "2") {
-            if(confirm("정말 삭제할까요?")) { await client.from('posts').delete().eq('id', id); loadFeed(); }
+    async function loadFeed(filter = 'all') {
+        const feedDiv = document.getElementById('feed');
+        let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
+        posts = posts || [];
+        
+        // 1년 전 타임라인
+        let timelineHtml = "";
+        const todayStr = new Date().toISOString().slice(5, 10);
+        const mem = posts.filter(p => p.created_at.slice(5, 10) === todayStr && new Date(p.created_at).getFullYear() < new Date().getFullYear());
+        if(mem.length > 0 && filter === 'all') {
+            timelineHtml = `<div class="memory-timeline"><b>⏳ 1년 전 오늘의 우리</b><br><small>${mem[0].content.substring(0,30)}...</small></div>`;
         }
+
+        if(filter !== 'all') {
+            if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
+            else posts = posts.filter(p => p.user_name === filter);
+        }
+
+        feedDiv.innerHTML = timelineHtml + posts.map(p => `
+            <div class="post-card">
+                <div class="image-slider">${(p.image_url||'').split(',').map(u=>`<img src="${u}">`).join('')}</div>
+                <div style="padding:25px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
+                        ${p.user_name === localStorage.getItem('siu_user') ? `<span onclick="deletePost('${p.id}')" style="opacity:0.3; font-size:12px; cursor:pointer;">삭제</span>` : ''}
+                    </div>
+                    <p style="white-space:pre-wrap; margin:0;">${p.content}</p>
+                </div>
+            </div>`).join('');
     }
 
-    function runLucky() {
-        const user = localStorage.getItem('siu_user');
-        const today = new Date().toISOString().slice(0, 10);
-        const seed = user + today;
-        let hash = 0;
-        for (let i = 0; i < seed.length; i++) { hash = seed.charCodeAt(i) + ((hash << 5) - hash); }
-        const index = Math.abs(hash) % FORTUNES.length;
-        alert(`🍀 ${user}님의 오늘의 운세\n\n"${FORTUNES[index]}"`);
+    function handleLogin() {
+        const n = document.getElementById('userName').value.trim();
+        if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); }
+        else { alert("스쿼드 멤버 이름을 입력하세요!"); }
+    }
+    function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
+    function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
+    function openDateEditor(d) { selDate = d; document.getElementById('dateEditor').style.display='block'; document.getElementById('selectedDateText').innerText=d; }
+    
+    async function saveDateEvent() {
+        const t = document.getElementById('dateInput').value; if(!t) return;
+        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate, type: t.includes('생일')?'#생일':'#일정' }]);
+        renderCalendar(); document.getElementById('dateEditor').style.display='none';
     }
 
     async function savePost() {
@@ -296,44 +220,14 @@
             location.reload();
         } catch(e) { alert("저장 실패!"); btn.innerText = "저장"; btn.disabled = false; }
     }
-
-    function openDateEditor(date) {
-        selDate = date; document.getElementById('dateEditor').style.display = 'block';
-        document.getElementById('selectedDateText').innerText = `🗓️ ${date} (${getDDay(date)})`;
-        const mine = allSchedules.filter(s => s.target_date === date);
-        document.getElementById('existingEvents').innerHTML = mine.map(s => `
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:14px;">
-                <span>${s.title}</span>
-                <button onclick="deleteSchedule('${s.id}')" style="color:#ff4d6d; border:none; background:none; cursor:pointer; font-weight:bold;">취소</button>
-            </div>
-        `).join('');
-    }
-
-    async function saveDateEvent() {
-        const t = document.getElementById('dateInput').value; if(!t) return;
-        const type = (t.includes('생일') || t.includes('🎂')) ? '#생일' : '#일정';
-        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate, type: type }]);
-        location.reload();
-    }
-
-    async function deleteSchedule(id) { if(confirm("일정을 취소할까요?")) { await client.from('schedules').delete().eq('id', id); location.reload(); } }
-
+    function updateFileStatus(i) { document.getElementById('fLab').innerText = `📸 ${i.files.length}장 선택됨`; }
     function changeTheme(tag, btn) {
-        const color = btn.getAttribute('data-color'), bg = btn.getAttribute('data-bg');
-        document.body.style.backgroundColor = bg;
-        document.getElementById('mainTitle').style.color = color;
-        document.querySelectorAll('.tag-btn').forEach(b => { 
-            b.classList.remove('active'); 
-            b.style.backgroundColor = 'white'; 
-            b.style.color = 'var(--text)';
-        });
-        btn.classList.add('active'); 
-        btn.style.backgroundColor = color;
-        btn.style.color = 'white';
+        document.querySelectorAll('.tag-btn').forEach(b => { b.classList.remove('active'); b.style.backgroundColor='white'; });
+        btn.classList.add('active'); btn.style.backgroundColor = btn.getAttribute('data-color');
         loadFeed(tag);
     }
-    function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
-    function updateFileStatus(input) { document.getElementById('fLab').innerText = `📸 ${input.files.length}장의 사진 선택됨`; }
+    async function deletePost(id) { if(confirm("삭제할까요?")) { await client.from('posts').delete().eq('id', id); loadFeed(); } }
+    function runLucky() { alert(FORTUNES[Math.floor(Math.random()*FORTUNES.length)]); }
 </script>
 </body>
 </html>
