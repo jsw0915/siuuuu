@@ -10,7 +10,6 @@
         :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; }
         body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
         
-        /* 1. PC 휠 스크롤 지원 및 스타일 */
         .scroll-container { 
             display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; 
             -ms-overflow-style: none; padding-bottom: 5px; cursor: grab;
@@ -18,10 +17,10 @@
         .scroll-container::-webkit-scrollbar { display: none; }
 
         .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
-        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; }
+        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; scrollbar-width: none; }
+        .image-slider::-webkit-scrollbar { display: none; }
         .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
         
-        /* 2. 캘린더 일정 표시 최적화 */
         .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; }
         .ev-h { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 60px; scrollbar-width: none; }
         .ev-h::-webkit-scrollbar { display: none; }
@@ -33,6 +32,9 @@
         .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
+
+        /* 타임라인 스타일 */
+        .memory-timeline { margin: 20px 15px; padding: 20px; background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%); border-radius: 25px; border: 2px dashed #eab308; }
     </style>
 </head>
 <body>
@@ -117,19 +119,22 @@
 
     window.onload = function() {
         client = supabase.createClient(SB_URL, SB_KEY);
-        if (localStorage.getItem('siu_user')) showApp();
+        if (localStorage.getItem('siu_user')) { showApp(); }
+        initGlobalScroll();
+    };
 
-        // [추가] PC 가로 스크롤 마우스 휠 지원
-        const scrollContainers = document.querySelectorAll('.scroll-container, .image-slider');
-        scrollContainers.forEach(el => {
-            el.addEventListener('wheel', (e) => {
+    function initGlobalScroll() {
+        // 모든 스크롤 컨테이너에 휠 이벤트 연결
+        document.addEventListener('wheel', (e) => {
+            const container = e.target.closest('.scroll-container, .image-slider');
+            if (container) {
                 if (e.deltaY !== 0) {
                     e.preventDefault();
-                    el.scrollLeft += e.deltaY;
+                    container.scrollLeft += e.deltaY;
                 }
-            });
-        });
-    };
+            }
+        }, { passive: false });
+    }
 
     function handleLogin() {
         const n = document.getElementById('userName').value.trim();
@@ -149,17 +154,38 @@
     async function loadFeed(filter = 'all') {
         const feedDiv = document.getElementById('feed');
         feedDiv.innerHTML = '<p style="text-align:center; padding:100px 0; opacity:0.3;">추억을 불러오는 중...</p>';
+        
         let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
+        if(!posts) posts = [];
+
+        // [추가] 1년 전 오늘 추억 소환 로직
+        let timelineHtml = "";
+        if (filter === 'all') {
+            const todayStr = new Date().toISOString().slice(5, 10); // "MM-DD"
+            const thisYear = new Date().getFullYear();
+            const memory = posts.filter(p => p.created_at.slice(5, 10) === todayStr && new Date(p.created_at).getFullYear() < thisYear);
+            
+            if (memory.length > 0) {
+                timelineHtml = `
+                    <div class="memory-timeline">
+                        <h3 style="margin:0 0 10px 0; font-size: 14px; color: #a16207;">⏳ 1년 전 오늘의 우리</h3>
+                        <div style="font-size: 13px; color: #854d0e; font-weight: bold;">"${memory[0].content.substring(0, 40)}..."</div>
+                        <small style="opacity: 0.6; font-size: 11px;">벌써 시간이 이렇게! 추억 돋네요 🔥</small>
+                    </div>`;
+            }
+        }
+
         if(filter !== 'all') {
             if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
             else posts = posts.filter(p => p.user_name === filter);
         }
-        feedDiv.innerHTML = (posts || []).map(p => {
+
+        const feedHtml = posts.map(p => {
             const imgs = p.image_url ? p.image_url.split(',') : [];
             return `
                 <div class="post-card">
                     <div class="heart-overlay" id="heart-${p.id}">❤️</div>
-                    <div class="image-slider" ondblclick="handleDoubleTap('${p.id}')">
+                    <div class="image-slider">
                         ${imgs.map(url => `<img src="${url}">`).join('')}
                     </div>
                     <div style="padding:25px;">
@@ -180,6 +206,46 @@
                     </div>
                 </div>`;
         }).join('');
+        feedDiv.innerHTML = timelineHtml + feedHtml;
+    }
+
+    // [개선] 캘린더 렌더링 + 데이터 표시 통합
+    async function renderCalendar() {
+        const y = viewDate.getFullYear(), m = viewDate.getMonth();
+        document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
+        const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
+        const body = document.getElementById('calBody'); 
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; opacity:0.5;">Loading...</td></tr>';
+        
+        // 데이터를 먼저 로드
+        const { data } = await client.from('schedules').select('*');
+        allSchedules = data || [];
+        body.innerHTML = '';
+
+        let date = 1;
+        for (let i = 0; i < 6; i++) {
+            let row = document.createElement('tr');
+            for (let j = 0; j < 7; j++) {
+                let cell = document.createElement('td'); cell.className = "cal-day";
+                if (i === 0 && j < first || date > last) { 
+                    cell.innerHTML = ""; 
+                } else {
+                    const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                    const dayEvents = allSchedules.filter(s => s.target_date === dKey);
+                    const eventLabels = dayEvents.map(ev => {
+                        const color = (ev.type === '#생일' || ev.title.includes('생일')) ? '#fb7185' : '#38bdf8';
+                        return `<span class="day-label" style="background:${color}">${ev.title}</span>`;
+                    }).join('');
+
+                    cell.setAttribute('data-date', dKey);
+                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h">${eventLabels}</div>`;
+                    cell.onclick = () => openDateEditor(dKey);
+                    date++;
+                }
+                row.appendChild(cell);
+            }
+            body.appendChild(row); if (date > last) break;
+        }
     }
 
     async function handleDoubleTap(id) {
@@ -215,7 +281,6 @@
         alert(`🍀 ${user}님의 오늘의 운세\n\n"${FORTUNES[index]}"`);
     }
 
-    // [개선] 다중 사진 저장 로직
     async function savePost() {
         const c = document.getElementById('pContent').value; if(!c) return;
         const btn = document.getElementById('sBtn'); btn.innerText = "저장 중..."; btn.disabled = true;
@@ -230,44 +295,6 @@
             await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
             location.reload();
         } catch(e) { alert("저장 실패!"); btn.innerText = "저장"; btn.disabled = false; }
-    }
-
-    // [개선] 캘린더 렌더링 및 일정 표시
-    function renderCalendar() {
-        const y = viewDate.getFullYear(), m = viewDate.getMonth();
-        document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
-        const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
-        const body = document.getElementById('calBody'); body.innerHTML = '';
-        let date = 1;
-        for (let i = 0; i < 6; i++) {
-            let row = document.createElement('tr');
-            for (let j = 0; j < 7; j++) {
-                let cell = document.createElement('td'); cell.className = "cal-day";
-                if (i === 0 && j < first || date > last) { cell.innerHTML = ""; }
-                else {
-                    const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-                    cell.setAttribute('data-date', dKey);
-                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h" id="ev-${dKey}"></div>`;
-                    cell.onclick = () => openDateEditor(dKey);
-                    date++;
-                }
-                row.appendChild(cell);
-            }
-            body.appendChild(row); if (date > last) break;
-        }
-        fetchCalData();
-    }
-
-    async function fetchCalData() {
-        const { data } = await client.from('schedules').select('*');
-        allSchedules = data || [];
-        allSchedules.forEach(ev => {
-            const target = document.getElementById(`ev-${ev.target_date}`);
-            if(target) {
-                const color = (ev.type === '#생일' || ev.title.includes('생일')) ? '#fb7185' : '#38bdf8';
-                target.innerHTML += `<span class="day-label" style="background:${color}">${ev.title}</span>`;
-            }
-        });
     }
 
     function openDateEditor(date) {
@@ -295,8 +322,14 @@
         const color = btn.getAttribute('data-color'), bg = btn.getAttribute('data-bg');
         document.body.style.backgroundColor = bg;
         document.getElementById('mainTitle').style.color = color;
-        document.querySelectorAll('.tag-btn').forEach(b => { b.classList.remove('active'); b.style.backgroundColor = 'white'; });
-        btn.classList.add('active'); btn.style.backgroundColor = color;
+        document.querySelectorAll('.tag-btn').forEach(b => { 
+            b.classList.remove('active'); 
+            b.style.backgroundColor = 'white'; 
+            b.style.color = 'var(--text)';
+        });
+        btn.classList.add('active'); 
+        btn.style.backgroundColor = color;
+        btn.style.color = 'white';
         loadFeed(tag);
     }
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
