@@ -22,8 +22,6 @@
         .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
         .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        
-        /* 추가 기능용 스타일 */
         .post-menu { position: absolute; top: 15px; right: 15px; z-index: 10; display: flex; gap: 5px; }
         .menu-btn { background: rgba(255,255,255,0.7); border: none; padding: 5px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer; backdrop-filter: blur(4px); }
         .like-badge { position: absolute; bottom: 15px; right: 15px; background: rgba(255,255,255,0.8); padding: 4px 10px; border-radius: 15px; font-size: 12px; font-weight: 900; color: #fb7185; pointer-events: none; }
@@ -89,7 +87,6 @@
             <button onclick="runLucky()" style="flex: 0.6; background: #10b981; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">🍀</button>
         </div>
     </div>
-
     <div id="feed"></div>
 </div>
 
@@ -139,10 +136,12 @@
         const currentUser = localStorage.getItem('siu_user');
         let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
         posts = posts || [];
-        if(filter !== 'all') posts = (['추억','생일'].includes(filter)) ? posts.filter(p => p.content.includes(filter)) : posts.filter(p => p.user_name === filter);
+        if(filter !== 'all') posts = (['추억','생일'].includes(filter)) ? posts.filter(p => p.content && p.content.includes(filter)) : posts.filter(p => p.user_name === filter);
         
         feedDiv.innerHTML = posts.map(p => {
-            const isLiked = (p.liked_users || "").split(',').includes(currentUser);
+            const likedUsers = p.liked_users || "";
+            const isLiked = likedUsers.split(',').includes(currentUser);
+            const pLikes = p.likes || 0;
             return `
             <div class="post-card">
                 ${p.user_name === currentUser ? `
@@ -150,12 +149,12 @@
                     <button class="menu-btn" onclick="editPost('${p.id}', \`${p.content}\`)">수정</button>
                     <button class="menu-btn" style="color:red;" onclick="deletePost('${p.id}')">삭제</button>
                 </div>` : ''}
-                <div class="image-slider" ondblclick="handleLike('${p.id}', '${p.liked_users || ''}', ${p.likes || 0})">
+                <div class="image-slider" ondblclick="handleLike('${p.id}', '${likedUsers}', ${pLikes})">
                     ${(p.image_url||'').split(',').filter(u=>u).map(u => `<img src="${u}">`).join('')}
-                    <div class="like-badge">${isLiked ? '❤️' : '🤍'} ${p.likes || 0}</div>
+                    <div class="like-badge">${isLiked ? '❤️' : '🤍'} ${pLikes}</div>
                 </div>
                 <div style="padding:25px;">
-                    <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
+                    <b style="color:${SQUAD_COLORS[p.user_name] || '#eab308'}">BY ${p.user_name}</b>
                     <p style="font-size:16px; margin:10px 0 20px; line-height:1.7;">${p.content}</p>
                     <div id="comments-${p.id}" style="border-top:1px solid #eee; padding-top:15px;">
                         ${(p.comments || []).map(c => `<div class="comment-item"><span><b>${c.user_name}</b> ${c.content}</span>${c.user_name === currentUser ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">✕</small>` : ''}</div>`).join('')}
@@ -196,16 +195,13 @@
     function openDateEditor(d) { selDate = d; document.getElementById('dateEditor').style.display = 'block'; document.getElementById('selectedDateText').innerText = `📅 ${d}`; const mine = allSchedules.filter(s => s.target_date === d); document.getElementById('existingEvents').innerHTML = mine.map(s => `<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${s.title}</span><button onclick="deleteSchedule('${s.id}')" style="color:red; border:none; background:none;">✕</button></div>`).join(''); }
     async function saveDateEvent() { const t = document.getElementById('dateInput').value; if(!t) return; await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate }]); document.getElementById('dateInput').value=""; renderCalendar(); }
     
-    // 업로드 로직 개선 (location.reload 대신 loadFeed 사용)
     async function savePost() {
         const c = document.getElementById('pContent').value;
         const f = document.getElementById('pFile').files;
-        if(!c) return;
-        
+        if(!c) return alert("내용을 입력해주세요!");
         const sBtn = document.getElementById('sBtn');
         sBtn.innerText = "저장 중...";
         sBtn.disabled = true;
-
         try {
             let urls = [];
             for(let file of f) {
@@ -213,19 +209,12 @@
                 await client.storage.from('photos').upload(fn, file);
                 urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl);
             }
-            await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
-            
-            // 입력창 초기화 및 리로드
+            await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user'), likes: 0, liked_users: "" }]);
             document.getElementById('pContent').value = "";
             document.getElementById('pFile').value = "";
             document.getElementById('fLab').innerText = "사진 추가";
             loadFeed(); 
-        } catch(e) {
-            alert("저장 실패!");
-        } finally {
-            sBtn.innerText = "기억 저장";
-            sBtn.disabled = false;
-        }
+        } catch(e) { alert("저장 실패!"); } finally { sBtn.innerText = "기억 저장"; sBtn.disabled = false; }
     }
 
     async function deleteSchedule(id) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; }
