@@ -10,7 +10,7 @@
         :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; }
         body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
         
-        /* 가로 스크롤 개선 (PC 휠 지원 스타일) */
+        /* 1. PC 휠 스크롤 지원 및 스타일 */
         .scroll-container { 
             display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; 
             -ms-overflow-style: none; padding-bottom: 5px; cursor: grab;
@@ -21,18 +21,13 @@
         .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; }
         .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
         
-        /* 캘린더 스타일 강화 */
+        /* 2. 캘린더 일정 표시 최적화 */
         .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; }
-        .ev-h { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow: hidden; }
-        .day-label { font-size: 9px; padding: 3px 5px; border-radius: 4px; color: white; display: block; font-weight: bold; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .ev-h { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 60px; scrollbar-width: none; }
+        .ev-h::-webkit-scrollbar { display: none; }
+        .day-label { font-size: 9px; padding: 3px 5px; border-radius: 4px; color: white; display: block; font-weight: bold; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; margin-bottom: 1px; }
         
-        /* 입력창 크기 확대 */
-        textarea { 
-            width: 100%; min-height: 180px; border: none; background: #f8fafc; 
-            border-radius: 20px; padding: 25px; font-size: 16px; outline: none; 
-            resize: none; box-sizing: border-box; line-height: 1.6;
-        }
-
+        textarea { width: 100%; min-height: 180px; border: none; background: #f8fafc; border-radius: 20px; padding: 25px; font-size: 16px; outline: none; resize: none; box-sizing: border-box; line-height: 1.6; }
         .heart-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: white; font-size: 80px; transition: 0.4s; pointer-events: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.3); }
         .heart-overlay.active { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
         .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -124,13 +119,15 @@
         client = supabase.createClient(SB_URL, SB_KEY);
         if (localStorage.getItem('siu_user')) showApp();
 
-        // PC 가로 스크롤 마우스 휠 지원
-        const scrollCont = document.querySelector('.scroll-container');
-        scrollCont.addEventListener('wheel', (e) => {
-            if (e.deltaY !== 0) {
-                e.preventDefault();
-                scrollCont.scrollLeft += e.deltaY;
-            }
+        // [추가] PC 가로 스크롤 마우스 휠 지원
+        const scrollContainers = document.querySelectorAll('.scroll-container, .image-slider');
+        scrollContainers.forEach(el => {
+            el.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    el.scrollLeft += e.deltaY;
+                }
+            });
         });
     };
 
@@ -149,7 +146,6 @@
         return diff === 0 ? "D-Day" : (diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`);
     }
 
-    // [피드 로드]
     async function loadFeed(filter = 'all') {
         const feedDiv = document.getElementById('feed');
         feedDiv.innerHTML = '<p style="text-align:center; padding:100px 0; opacity:0.3;">추억을 불러오는 중...</p>';
@@ -200,43 +196,43 @@
     async function deleteComment(id) { if(confirm("댓글을 삭제할까요?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
 
     async function editPost(id, oldContent) {
-        const newContent = prompt("내용 수정 (비우고 확인하면 삭제)", oldContent);
-        if (newContent === null) return;
-        if (newContent === "") { if(confirm("게시물을 삭제할까요?")) { await client.from('posts').delete().eq('id', id); loadFeed(); } }
-        else { await client.from('posts').update({ content: newContent }).eq('id', id); loadFeed(); }
+        const choice = prompt("1: 내용 수정, 2: 게시물 삭제 (숫자 입력)", "1");
+        if (choice === "1") {
+            const newContent = prompt("내용 수정", oldContent);
+            if (newContent) { await client.from('posts').update({ content: newContent }).eq('id', id); loadFeed(); }
+        } else if (choice === "2") {
+            if(confirm("정말 삭제할까요?")) { await client.from('posts').delete().eq('id', id); loadFeed(); }
+        }
     }
 
-    // [운세 - 하루 한 번 로직]
     function runLucky() {
         const user = localStorage.getItem('siu_user');
-        const today = new Date().toISOString().slice(0, 10); // "2024-05-20"
-        const seed = user + today; // 이름+날짜 조합 시드
-        
-        // 고정된 랜덤 인덱스 생성 (시드 기반)
+        const today = new Date().toISOString().slice(0, 10);
+        const seed = user + today;
         let hash = 0;
-        for (let i = 0; i < seed.length; i++) {
-            hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-        }
+        for (let i = 0; i < seed.length; i++) { hash = seed.charCodeAt(i) + ((hash << 5) - hash); }
         const index = Math.abs(hash) % FORTUNES.length;
-        
-        alert(`🍀 ${user}님의 오늘의 운세\n(자정까지 동일하게 유지됩니다)\n\n"${FORTUNES[index]}"`);
+        alert(`🍀 ${user}님의 오늘의 운세\n\n"${FORTUNES[index]}"`);
     }
 
+    // [개선] 다중 사진 저장 로직
     async function savePost() {
         const c = document.getElementById('pContent').value; if(!c) return;
         const btn = document.getElementById('sBtn'); btn.innerText = "저장 중..."; btn.disabled = true;
         const files = document.getElementById('pFile').files;
         let urls = [];
-        for(let f of files) {
-            const fn = `${Date.now()}_${f.name}`;
-            await client.storage.from('photos').upload(fn, f);
-            urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl);
-        }
-        await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
-        location.reload();
+        try {
+            for(let f of files) {
+                const fn = `${Date.now()}_${f.name}`;
+                await client.storage.from('photos').upload(fn, f);
+                urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl);
+            }
+            await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
+            location.reload();
+        } catch(e) { alert("저장 실패!"); btn.innerText = "저장"; btn.disabled = false; }
     }
 
-    // [캘린더 렌더링 - 표시 기능 강화]
+    // [개선] 캘린더 렌더링 및 일정 표시
     function renderCalendar() {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
@@ -251,7 +247,7 @@
                 else {
                     const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
                     cell.setAttribute('data-date', dKey);
-                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h"></div>`;
+                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h" id="ev-${dKey}"></div>`;
                     cell.onclick = () => openDateEditor(dKey);
                     date++;
                 }
@@ -266,15 +262,10 @@
         const { data } = await client.from('schedules').select('*');
         allSchedules = data || [];
         allSchedules.forEach(ev => {
-            // 날짜 포맷팅 일치 확인 (2024-05-09 형태)
-            const target = document.querySelector(`.cal-day[data-date="${ev.target_date}"] .ev-h`);
+            const target = document.getElementById(`ev-${ev.target_date}`);
             if(target) {
-                const color = ev.type === '#생일' ? '#fb7185' : '#38bdf8';
-                const label = document.createElement('span');
-                label.className = 'day-label';
-                label.style.backgroundColor = color;
-                label.innerText = ev.title;
-                target.appendChild(label);
+                const color = (ev.type === '#생일' || ev.title.includes('생일')) ? '#fb7185' : '#38bdf8';
+                target.innerHTML += `<span class="day-label" style="background:${color}">${ev.title}</span>`;
             }
         });
     }
@@ -285,7 +276,7 @@
         const mine = allSchedules.filter(s => s.target_date === date);
         document.getElementById('existingEvents').innerHTML = mine.map(s => `
             <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:14px;">
-                <span>${s.title} <small style="opacity:0.5;">(${getDDay(s.target_date)})</small></span>
+                <span>${s.title}</span>
                 <button onclick="deleteSchedule('${s.id}')" style="color:#ff4d6d; border:none; background:none; cursor:pointer; font-weight:bold;">취소</button>
             </div>
         `).join('');
