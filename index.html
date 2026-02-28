@@ -6,25 +6,38 @@
     <title>SIUUUU! ARCHIVE ULTIMATE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ...기존 스타일 생략 (동일)... */
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; }
         body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
-        .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; }
-        .scroll-container::-webkit-scrollbar { display: none; }
-        .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
-        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; }
-        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
-        .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.02); cursor: pointer; }
-        .day-label { font-size: 9px; padding: 4px; border-radius: 6px; color: white; display: block; margin-top: 3px; font-weight: bold; text-align: center; }
         
-        /* [추가 스타일] */
+        /* 가로 스크롤 개선 (PC 휠 지원 스타일) */
+        .scroll-container { 
+            display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; 
+            -ms-overflow-style: none; padding-bottom: 5px; cursor: grab;
+        }
+        .scroll-container::-webkit-scrollbar { display: none; }
+
+        .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
+        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; }
+        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
+        
+        /* 캘린더 스타일 강화 */
+        .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; }
+        .ev-h { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow: hidden; }
+        .day-label { font-size: 9px; padding: 3px 5px; border-radius: 4px; color: white; display: block; font-weight: bold; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        
+        /* 입력창 크기 확대 */
+        textarea { 
+            width: 100%; min-height: 180px; border: none; background: #f8fafc; 
+            border-radius: 20px; padding: 25px; font-size: 16px; outline: none; 
+            resize: none; box-sizing: border-box; line-height: 1.6;
+        }
+
         .heart-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: white; font-size: 80px; transition: 0.4s; pointer-events: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.3); }
         .heart-overlay.active { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-        .comment-item { font-size: 13px; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; }
-        .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
-        .tag-btn.active { color: white !important; }
+        .comment-item { font-size: 13px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .tag-btn.active { color: white !important; transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -33,19 +46,19 @@
     <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic;">SIUUUU!</h1>
     <div style="width: 300px; margin-top: 30px;">
         <input id="userName" type="text" placeholder="이름을 입력하세요" style="width: 100%; padding: 20px; border-radius: 20px; border: 2px solid #eee; text-align: center; font-size: 18px; outline: none;">
-        <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 20px; border-radius: 20px; font-weight: 900; border: none; margin-top:10px;">SQUAD IN</button>
+        <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 20px; border-radius: 20px; font-weight: 900; border: none; margin-top:10px; cursor: pointer;">SQUAD IN</button>
     </div>
 </div>
 
 <div id="app" style="display: none; max-width: 600px; margin: 0 auto; padding-bottom: 100px;">
-    <header style="padding: 40px 25px 20px; display: flex; justify-content: space-between;">
-        <h1 id="mainTitle" style="font-size: 2.5rem; font-weight: 900; font-style: italic;">SIUUUU! 🔥</h1>
-        <button onclick="handleLogout()" style="opacity: 0.4; border: 1px solid #ccc; padding: 8px 15px; border-radius: 12px;">EXIT</button>
+    <header style="padding: 40px 25px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h1 id="mainTitle" style="font-size: 2.5rem; font-weight: 900; font-style: italic; margin:0;">SIUUUU! 🔥</h1>
+        <button onclick="handleLogout()" style="opacity: 0.4; border: 1px solid #ccc; padding: 8px 15px; border-radius: 12px; background: none; cursor: pointer;">EXIT</button>
     </header>
 
     <div class="post-card" style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 id="calMonth" style="margin: 0; font-weight: 900;"></h2>
+            <h2 id="calMonth" style="margin: 0; font-weight: 900; font-size: 1.5rem;"></h2>
             <div style="display: flex; gap: 20px; color: #eab308; font-weight: 900; cursor: pointer;">
                 <span onclick="moveMonth(-1)">◀</span> <span onclick="moveMonth(1)">▶</span>
             </div>
@@ -64,7 +77,7 @@
         </div>
     </div>
 
-    <div class="category-wrapper">
+    <div class="category-wrapper" style="position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 10px 0;">
         <div class="scroll-container" id="categoryScroll" style="padding: 5px 20px;">
             <button onclick="changeTheme('all', this)" class="tag-btn active" data-color="#eab308" data-bg="#fdfbf7">#전체</button>
             <button onclick="changeTheme('추억', this)" class="tag-btn" data-color="#38bdf8" data-bg="#f0f9ff">#추억🧸</button>
@@ -79,13 +92,13 @@
         </div>
     </div>
 
-    <div class="input-area">
-        <textarea id="pContent" placeholder="기록할 내용을 입력하세요..."></textarea>
+    <div class="input-area" style="margin: 20px 15px;">
+        <textarea id="pContent" placeholder="기록할 내용을 시원하게 입력하세요..."></textarea>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
             <input type="file" id="pFile" style="display: none;" multiple onchange="updateFileStatus(this)">
-            <label for="pFile" id="fLab" style="flex: 1; text-align: center; padding: 18px; background: #f8fafc; border-radius: 20px; font-weight: 800; border: 2px dashed #e2e8f0; color: #94a3b8; cursor: pointer;">사진 추가</label>
-            <button onclick="savePost()" id="sBtn" style="flex: 1.2; background: #eab308; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">저장</button>
-            <button onclick="runLucky()" style="flex: 0.5; background: #10b981; color: white; border-radius: 20px; font-weight: 900; border: none;">🍀 운세</button>
+            <label for="pFile" id="fLab" style="flex: 1; text-align: center; padding: 18px; background: white; border-radius: 20px; font-weight: 800; border: 2px dashed #e2e8f0; color: #94a3b8; cursor: pointer;">사진 추가</label>
+            <button onclick="savePost()" id="sBtn" style="flex: 1.2; background: #eab308; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">기억 저장</button>
+            <button onclick="runLucky()" style="flex: 0.6; background: #10b981; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">🍀 운세</button>
         </div>
     </div>
 
@@ -93,15 +106,13 @@
 </div>
 
 <script>
-    // [운세 100가지 리스트 - 요약 탑재]
     const FORTUNES = [
         "오늘은 SIUUUU!를 외칠 기막힌 일이 생깁니다.", "스쿼드 멤버 중 한 명에게 연락이 올지도?", "로또까지는 아니어도 편의점 2+1의 행운이!",
         "오늘은 먹고 싶었던 음식을 꼭 드세요.", "태지아님이 당신의 운세를 축복합니다.", "성우님이 응원하는 하루, 백전백승!",
         "준서님의 긍정 기운이 전달되었습니다.", "태현님의 지혜가 필요한 순간이 올 거예요.", "지호님의 섬세함으로 위기를 탈출합니다.",
-        "다원님의 에너지가 폭발하는 날!", "태성님의 뚝심이 빛을 발할 것입니다.", "오늘은 아무것도 안 해도 완벽한 하루입니다.",
-        // ... (100개까지 확장 가능)
+        "다원님의 에너지가 폭발하는 날!", "태성님의 뚝심이 빛을 발할 것입니다.", "오늘은 아무것도 안 해도 완벽한 하루입니다."
     ];
-    for(let i=0; i<88; i++) FORTUNES.push(`행운지수 ${Math.floor(Math.random()*100+1)}%! 우리 스쿼드와 함께라면 무적입니다!`);
+    for(let i=0; i<88; i++) FORTUNES.push(`행운지수 ${Math.floor(Math.random()*40+60)}%! 우리 스쿼드와 함께라면 무적입니다!`);
 
     const SQUAD_COLORS = { '태지아': '#ff4d6d', '조성우': '#007bff', '염태성': '#20c997', '김태현': '#9b5de5', '이준서': '#f15bb5', '이지호': '#d4a373', '이다원': '#7b2cbf', '추억': '#38bdf8', '생일': '#fb7185' };
     const SQUAD = Object.keys(SQUAD_COLORS);
@@ -112,6 +123,15 @@
     window.onload = function() {
         client = supabase.createClient(SB_URL, SB_KEY);
         if (localStorage.getItem('siu_user')) showApp();
+
+        // PC 가로 스크롤 마우스 휠 지원
+        const scrollCont = document.querySelector('.scroll-container');
+        scrollCont.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                scrollCont.scrollLeft += e.deltaY;
+            }
+        });
     };
 
     function handleLogin() {
@@ -129,18 +149,17 @@
         return diff === 0 ? "D-Day" : (diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`);
     }
 
-    // [피드 및 인터랙션 기능 추가]
+    // [피드 로드]
     async function loadFeed(filter = 'all') {
         const feedDiv = document.getElementById('feed');
-        feedDiv.innerHTML = '<p style="text-align:center; padding:100px 0; opacity:0.3;">기억 로딩 중...</p>';
+        feedDiv.innerHTML = '<p style="text-align:center; padding:100px 0; opacity:0.3;">추억을 불러오는 중...</p>';
         let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
         if(filter !== 'all') {
             if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
             else posts = posts.filter(p => p.user_name === filter);
         }
-        feedDiv.innerHTML = posts.map(p => {
+        feedDiv.innerHTML = (posts || []).map(p => {
             const imgs = p.image_url ? p.image_url.split(',') : [];
-            const isLiked = p.liked_users?.includes(localStorage.getItem('siu_user'));
             return `
                 <div class="post-card">
                     <div class="heart-overlay" id="heart-${p.id}">❤️</div>
@@ -148,32 +167,28 @@
                         ${imgs.map(url => `<img src="${url}">`).join('')}
                     </div>
                     <div style="padding:25px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                             <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
-                             ${p.user_name === localStorage.getItem('siu_user') ? `<span onclick="editPost('${p.id}', \`${p.content}\`)" style="opacity:0.3; cursor:pointer;">수정/삭제</span>` : ''}
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
+                             <b style="color:${SQUAD_COLORS[p.user_name] || '#eab308'}">BY ${p.user_name}</b>
+                             ${p.user_name === localStorage.getItem('siu_user') ? `<span onclick="editPost('${p.id}', \`${p.content}\`)" style="opacity:0.3; font-size:12px; cursor:pointer; padding:5px;">수정/삭제</span>` : ''}
                         </div>
-                        <p style="font-size:16px; margin-bottom:20px;">${p.content}</p>
-                        
-                        <div style="border-top:1px solid #f8f8f8; padding-top:15px;">
-                            <div style="margin-bottom:10px;">${(p.comments || []).map(c => `
+                        <p style="font-size:16px; margin:0 0 20px 0; line-height:1.7; white-space:pre-wrap;">${p.content}</p>
+                        <div style="border-top:1px solid #f1f5f9; padding-top:15px;">
+                            <div style="margin-bottom:12px;">${(p.comments || []).map(c => `
                                 <div class="comment-item">
                                     <span><b>${c.user_name}</b> ${c.content}</span>
-                                    ${c.user_name === localStorage.getItem('siu_user') ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3;">삭제</small>` : ''}
+                                    ${c.user_name === localStorage.getItem('siu_user') ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">지우기</small>` : ''}
                                 </div>
                             `).join('')}</div>
-                            <input type="text" placeholder="댓글 달기..." onkeydown="if(event.key==='Enter') addComment('${p.id}', this.value)" style="width:100%; border:none; outline:none; font-size:14px; background:none;">
+                            <input type="text" placeholder="우리들의 한마디..." onkeydown="if(event.key==='Enter') addComment('${p.id}', this.value)" style="width:100%; border:none; outline:none; font-size:14px; background:#f8fafc; padding:12px; border-radius:12px;">
                         </div>
                     </div>
                 </div>`;
         }).join('');
     }
 
-    // [추가된 핵심 기능들]
     async function handleDoubleTap(id) {
         const heart = document.getElementById(`heart-${id}`);
         heart.classList.add('active'); setTimeout(() => heart.classList.remove('active'), 800);
-        // 좋아요 로직 (Supabase posts 테이블에 liked_users(text array) 컬럼이 있다고 가정)
-        // 여기서는 하트 애니메이션 연출에 집중합니다.
     }
 
     async function addComment(postId, content) {
@@ -185,15 +200,26 @@
     async function deleteComment(id) { if(confirm("댓글을 삭제할까요?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
 
     async function editPost(id, oldContent) {
-        const newContent = prompt("게시글 수정 (내용을 모두 지우고 확인을 누르면 삭제됩니다)", oldContent);
+        const newContent = prompt("내용 수정 (비우고 확인하면 삭제)", oldContent);
         if (newContent === null) return;
-        if (newContent === "") { if(confirm("삭제하시겠습니까?")) { await client.from('posts').delete().eq('id', id); loadFeed(); } }
+        if (newContent === "") { if(confirm("게시물을 삭제할까요?")) { await client.from('posts').delete().eq('id', id); loadFeed(); } }
         else { await client.from('posts').update({ content: newContent }).eq('id', id); loadFeed(); }
     }
 
+    // [운세 - 하루 한 번 로직]
     function runLucky() {
-        const res = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
-        alert(`🍀 ${localStorage.getItem('siu_user')}님의 오늘의 운세\n\n"${res}"`);
+        const user = localStorage.getItem('siu_user');
+        const today = new Date().toISOString().slice(0, 10); // "2024-05-20"
+        const seed = user + today; // 이름+날짜 조합 시드
+        
+        // 고정된 랜덤 인덱스 생성 (시드 기반)
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+            hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % FORTUNES.length;
+        
+        alert(`🍀 ${user}님의 오늘의 운세\n(자정까지 동일하게 유지됩니다)\n\n"${FORTUNES[index]}"`);
     }
 
     async function savePost() {
@@ -210,7 +236,7 @@
         location.reload();
     }
 
-    // [나머지 캘린더/일정 삭제 기능 유지 및 보완]
+    // [캘린더 렌더링 - 표시 기능 강화]
     function renderCalendar() {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
@@ -225,7 +251,7 @@
                 else {
                     const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
                     cell.setAttribute('data-date', dKey);
-                    cell.innerHTML = `<span style="opacity:0.2;">${date}</span><div class="ev-h"></div>`;
+                    cell.innerHTML = `<span style="opacity:0.3; font-weight:bold;">${date}</span><div class="ev-h"></div>`;
                     cell.onclick = () => openDateEditor(dKey);
                     date++;
                 }
@@ -240,10 +266,15 @@
         const { data } = await client.from('schedules').select('*');
         allSchedules = data || [];
         allSchedules.forEach(ev => {
-            const holder = document.querySelector(`.cal-day[data-date="${ev.target_date}"] .ev-h`);
-            if(holder) {
-                let color = ev.type === '#생일' ? '#fb7185' : '#38bdf8';
-                holder.innerHTML += `<span class="day-label" style="background:${color}">${ev.title}</span>`;
+            // 날짜 포맷팅 일치 확인 (2024-05-09 형태)
+            const target = document.querySelector(`.cal-day[data-date="${ev.target_date}"] .ev-h`);
+            if(target) {
+                const color = ev.type === '#생일' ? '#fb7185' : '#38bdf8';
+                const label = document.createElement('span');
+                label.className = 'day-label';
+                label.style.backgroundColor = color;
+                label.innerText = ev.title;
+                target.appendChild(label);
             }
         });
     }
@@ -253,19 +284,22 @@
         document.getElementById('selectedDateText').innerText = `🗓️ ${date} (${getDDay(date)})`;
         const mine = allSchedules.filter(s => s.target_date === date);
         document.getElementById('existingEvents').innerHTML = mine.map(s => `
-            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
-                <span>${s.title} (${getDDay(s.target_date)})</span>
-                <small onclick="deleteSchedule('${s.id}')" style="color:red; cursor:pointer;">취소</small>
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:14px;">
+                <span>${s.title} <small style="opacity:0.5;">(${getDDay(s.target_date)})</small></span>
+                <button onclick="deleteSchedule('${s.id}')" style="color:#ff4d6d; border:none; background:none; cursor:pointer; font-weight:bold;">취소</button>
             </div>
         `).join('');
     }
 
     async function saveDateEvent() {
         const t = document.getElementById('dateInput').value; if(!t) return;
-        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate, type: t.includes('생일')?'#생일':'#일정' }]);
+        const type = (t.includes('생일') || t.includes('🎂')) ? '#생일' : '#일정';
+        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate, type: type }]);
         location.reload();
     }
+
     async function deleteSchedule(id) { if(confirm("일정을 취소할까요?")) { await client.from('schedules').delete().eq('id', id); location.reload(); } }
+
     function changeTheme(tag, btn) {
         const color = btn.getAttribute('data-color'), bg = btn.getAttribute('data-bg');
         document.body.style.backgroundColor = bg;
@@ -275,7 +309,7 @@
         loadFeed(tag);
     }
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
-    function updateFileStatus(input) { document.getElementById('fLab').innerText = `${input.files.length}장 선택됨`; }
+    function updateFileStatus(input) { document.getElementById('fLab').innerText = `📸 ${input.files.length}장의 사진 선택됨`; }
 </script>
 </body>
 </html>
