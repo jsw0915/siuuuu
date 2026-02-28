@@ -9,7 +9,7 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; --green: #10b981; --pink: #fb7185; --blue: #38bdf8; }
         body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
-        .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; padding: 10px 20px; -webkit-overflow-scrolling: touch; }
+        .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; padding: 10px 20px; -webkit-overflow-scrolling: touch; cursor: grab; }
         .scroll-container::-webkit-scrollbar { display: none; }
         .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
         .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; scrollbar-width: none; }
@@ -88,10 +88,20 @@
     const SQUAD = Object.keys(SQUAD_COLORS);
     const SB_URL = 'https://chlqufwjiwfiqzvmocof.supabase.co', SB_KEY = 'sb_publishable_MyGDUC1VPEyrWP6THcgWEA_mk8HUpQj'; 
     let client, viewDate = new Date(), selDate = "", allSchedules = [];
-    window.onload = function() { client = supabase.createClient(SB_URL, SB_KEY); if (localStorage.getItem('siu_user')) showApp(); };
+
+    window.onload = function() { 
+        client = supabase.createClient(SB_URL, SB_KEY); 
+        if (localStorage.getItem('siu_user')) showApp(); 
+        
+        // PC 휠 스크롤 추가
+        const sc = document.getElementById('categoryScroll');
+        sc.addEventListener('wheel', (e) => { e.preventDefault(); sc.scrollLeft += e.deltaY; });
+    };
+
     function handleLogin() { const n = document.getElementById('userName').value.trim(); if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); } else alert("멤버가 아닙니다!"); }
     function showApp() { document.getElementById('gate').style.display = 'none'; document.getElementById('app').style.display = 'block'; renderCalendar(); loadFeed(); }
     function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
+
     async function renderCalendar() {
         const y = viewDate.getFullYear(), m = viewDate.getMonth();
         document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
@@ -115,6 +125,7 @@
             body.appendChild(row); if (date > last) break;
         }
     }
+
     async function loadFeed(filter = 'all') {
         const feedDiv = document.getElementById('feed');
         let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
@@ -122,7 +133,7 @@
         if(filter !== 'all') posts = (['추억','생일'].includes(filter)) ? posts.filter(p => p.content.includes(filter)) : posts.filter(p => p.user_name === filter);
         feedDiv.innerHTML = posts.map(p => `
             <div class="post-card">
-                <div class="image-slider">${(p.image_url||'').split(',').map(u => `<img src="${u}">`).join('')}</div>
+                <div class="image-slider">${(p.image_url||'').split(',').filter(u=>u).map(u => `<img src="${u}">`).join('')}</div>
                 <div style="padding:25px;">
                     <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
                     <p style="font-size:16px; margin:10px 0 20px; line-height:1.7;">${p.content}</p>
@@ -136,6 +147,7 @@
                 </div>
             </div>`).join('');
     }
+
     async function addComment(pId) { const i = document.getElementById(`cIn-${pId}`), c = i.value.trim(); if(!c) return; await client.from('comments').insert([{ post_id: pId, content: c, user_name: localStorage.getItem('siu_user') }]); i.value=""; loadFeed(); }
     async function deleteComment(id) { if(confirm("삭제?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
     function changeTheme(tag, btn) {
@@ -148,7 +160,19 @@
     async function savePost() { const c = document.getElementById('pContent').value, f = document.getElementById('pFile').files; if(!c) return; document.getElementById('sBtn').innerText = "저장 중..."; let urls = []; for(let file of f) { const fn = `${Date.now()}_${file.name}`; await client.storage.from('photos').upload(fn, file); urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl); } await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]); location.reload(); }
     async function deleteSchedule(id) { await client.from('schedules').delete().eq('id', id); renderCalendar(); document.getElementById('dateEditor').style.display='none'; }
     function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
-    function runLucky() { alert(`🍀 운세: 행운지수 ${Math.floor(Math.random()*40+60)}%! 가즈아!`); }
+
+    // 자정 갱신 + 유저별 고유 운세
+    function runLucky() {
+        const user = localStorage.getItem('siu_user') || "guest";
+        const today = new Date().toISOString().split('T')[0];
+        const seed = user + today;
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) { hash = ((hash << 5) - hash) + seed.charCodeAt(i); hash |= 0; }
+        const score = Math.abs(hash % 41) + 60;
+        const msgs = ["대박! 오늘 인생샷 건지는 날! 🔥", "운이 좋네요! 스쿼드에 기쁜 일이? 🚀", "평온한 하루, 맛있는 거 드세요! 😊", "무난한 하루, SIUUU 한 번 하고 힘내기! 🍀"];
+        const msg = score >= 90 ? msgs[0] : score >= 80 ? msgs[1] : score >= 70 ? msgs[2] : msgs[3];
+        alert(`🍀 [${user}] 오늘의 운세\n행운지수: ${score}%\n\n${msg}`);
+    }
     function updateFileStatus(i) { document.getElementById('fLab').innerText = `📸 ${i.files.length}장 선택됨`; }
 </script>
 </body>
