@@ -189,12 +189,51 @@
         else loadFeed();
     }
 
-    // 게시물 삭제 기능
+    // 🔥 사진 파일까지 완벽하게 지우는 삭제 함수 🔥
     async function deletePost(id) {
-        if (!confirm("정말 이 기록을 지울까요? 사진은 삭제되지 않습니다.")) return;
-        const { error } = await client.from('posts').delete().eq('id', id);
-        if (error) alert("삭제 실패: " + error.message);
-        else loadFeed();
+        if (!confirm("정말 이 기록과 사진을 모두 지울까요?")) return;
+
+        try {
+            // 1. 게시물 데이터를 가져와서 사진 URL 확인
+            const { data: post, error: getError } = await client
+                .from('posts')
+                .select('image_url')
+                .eq('id', id)
+                .single();
+
+            if (getError) throw getError;
+
+            // 2. Storage에서 파일 삭제 (첨부된 사진이 있을 경우)
+            if (post && post.image_url) {
+                // 여러 장일 경우 대비 (콤마로 구분된 URL 분리)
+                const urls = post.image_url.split(',').filter(u => u); 
+                const fileNames = urls.map(url => url.split('/').pop()); // URL 마지막의 파일명만 추출
+
+                if (fileNames.length > 0) {
+                    const { error: storageError } = await client
+                        .storage
+                        .from('photos')
+                        .remove(fileNames);
+                    
+                    if (storageError) {
+                        console.error("Storage 삭제 중 오류 (권한 문제일 수 있음):", storageError);
+                    }
+                }
+            }
+
+            // 3. DB에서 게시물 정보 완전히 삭제
+            const { error: dbError } = await client
+                .from('posts')
+                .delete()
+                .eq('id', id);
+
+            if (dbError) throw dbError;
+
+            alert("기록과 사진이 모두 삭제되었습니다. ✨");
+            loadFeed();
+        } catch (e) {
+            alert("삭제 실패: " + e.message);
+        }
     }
 
     async function savePost() {
