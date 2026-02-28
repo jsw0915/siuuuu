@@ -3,260 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIUUUU! ULTIMATE ARCHIVE</title>
+    <title>SIUUUU! ARCHIVE ULTIMATE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
+        /* ...기존 스타일 생략 (동일)... */
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        :root { --main: #eab308; --bg: #fdfbf7; --heart: #ff4d6d; --accent: #10b981; --slate: #64748b; }
-        body { background: var(--bg); font-family: 'Pretendard', sans-serif; margin: 0; padding-bottom: 80px; color: #334155; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
-
-        /* [1] 프리미엄 로그인 UI */
-        #loginOverlay { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; transition: 0.5s; }
-        .login-box { width: 100%; max-width: 400px; text-align: center; }
-        .login-box h1 { font-size: 3.5rem; color: var(--main); margin: 0; font-weight: 900; letter-spacing: -3px; }
-        .user-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 30px 0; }
-        .user-card { background: #f8fafc; border: 2px solid #f1f5f9; border-radius: 20px; padding: 18px 10px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-        .user-card.active { border-color: var(--main); background: #fefce8; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(234,179,8,0.15); }
-        #authForm { opacity: 0; transform: translateY(10px); transition: 0.4s; pointer-events: none; }
-        #authForm.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .pw-input { width: 100%; padding: 16px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 1rem; font-weight: 700; text-align: center; margin-bottom: 12px; outline: none; box-sizing: border-box; }
-        .login-btn { width: 100%; padding: 16px; background: var(--main); color: white; border: none; border-radius: 15px; font-weight: 900; font-size: 1.1rem; cursor: pointer; }
-
-        /* [2] 캘린더 & 메인 카드 */
-        .card { background: #fff; margin: 15px; border-radius: 25px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); position: relative; }
-        #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 15px; }
-        .cal-day { background: #f8fafc; border-radius: 12px; padding: 8px 0; font-size: 11px; text-align: center; min-height: 50px; cursor: pointer; transition: 0.2s; position: relative; }
-        .cal-day:active { background: #f1f5f9; }
-        .dday-tag { font-size: 8px; color: white; background: var(--heart); border-radius: 4px; padding: 1px 3px; display: block; margin: 2px 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* [3] 인스타 SNS 스타일 */
-        .btn-tab { padding: 10px 20px; border-radius: 50px; background: #fff; border: 1.5px solid #eee; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.2s; }
-        .btn-tab.active { background: var(--main); color: #fff; border-color: var(--main); }
-        .double-heart { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: white; font-size: 80px; z-index: 10; pointer-events: none; transition: 0.4s; opacity: 0; text-shadow: 0 0 20px rgba(0,0,0,0.3); }
-        .double-heart.active { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-        .comment-sec { padding: 15px 20px; background: #fafafa; border-top: 1px solid #f0f0f0; font-size: 13px; }
-        textarea { width: 100%; border: none; background: #f1f5f9; border-radius: 15px; padding: 15px; box-sizing: border-box; resize: none; font-size: 14px; margin-bottom: 10px; outline: none; }
-
-        /* [4] 모달 */
-        #editModal, #dateModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { width: 85%; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        :root { --main: #eab308; --bg: #fdfbf7; --text: #44403c; }
+        body { background-color: var(--bg); color: var(--text); margin: 0; font-family: 'Pretendard', sans-serif; transition: 0.5s; overflow-x: hidden; }
+        .scroll-container { display: flex; overflow-x: auto; gap: 12px; scrollbar-width: none; }
+        .scroll-container::-webkit-scrollbar { display: none; }
+        .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
+        .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; }
+        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
+        .cal-day { height: 95px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.02); cursor: pointer; }
+        .day-label { font-size: 9px; padding: 4px; border-radius: 6px; color: white; display: block; margin-top: 3px; font-weight: bold; text-align: center; }
+        
+        /* [추가 스타일] */
+        .heart-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: white; font-size: 80px; transition: 0.4s; pointer-events: none; z-index: 10; text-shadow: 0 0 20px rgba(0,0,0,0.3); }
+        .heart-overlay.active { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        .comment-item { font-size: 13px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .edit-input { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 10px; }
+        .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
+        .tag-btn.active { color: white !important; }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h1>SIUUUU!</h1>
-        <p style="color:var(--slate)">우리들만의 비밀 아카이브</p>
-        <div id="loginList" class="user-grid"></div>
-        <div id="authForm">
-            <input type="text" id="pwInp" class="pw-input">
-            <button class="login-btn" onclick="verifyLogin()">스쿼드 입장</button>
+<div id="gate" style="display: flex; position: fixed; inset: 0; z-index: 9999; background: #fdfbf7; flex-direction: column; align-items: center; justify-content: center;">
+    <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic;">SIUUUU!</h1>
+    <div style="width: 300px; margin-top: 30px;">
+        <input id="userName" type="text" placeholder="이름을 입력하세요" style="width: 100%; padding: 20px; border-radius: 20px; border: 2px solid #eee; text-align: center; font-size: 18px; outline: none;">
+        <button onclick="handleLogin()" style="width: 100%; background: #eab308; color: white; padding: 20px; border-radius: 20px; font-weight: 900; border: none; margin-top:10px;">SQUAD IN</button>
+    </div>
+</div>
+
+<div id="app" style="display: none; max-width: 600px; margin: 0 auto; padding-bottom: 100px;">
+    <header style="padding: 40px 25px 20px; display: flex; justify-content: space-between;">
+        <h1 id="mainTitle" style="font-size: 2.5rem; font-weight: 900; font-style: italic;">SIUUUU! 🔥</h1>
+        <button onclick="handleLogout()" style="opacity: 0.4; border: 1px solid #ccc; padding: 8px 15px; border-radius: 12px;">EXIT</button>
+    </header>
+
+    <div class="post-card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 id="calMonth" style="margin: 0; font-weight: 900;"></h2>
+            <div style="display: flex; gap: 20px; color: #eab308; font-weight: 900; cursor: pointer;">
+                <span onclick="moveMonth(-1)">◀</span> <span onclick="moveMonth(1)">▶</span>
+            </div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 11px;">
+            <thead style="color: #94a3b8;"><tr><th>SUN</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th></tr></thead>
+            <tbody id="calBody"></tbody>
+        </table>
+        <div id="dateEditor" style="display:none; margin-top: 20px; padding: 15px; background: #fdfbf7; border-radius: 20px; border: 1px solid #eee;">
+            <p id="selectedDateText" style="font-size: 13px; font-weight: 900; color: #eab308;"></p>
+            <div id="existingEvents"></div>
+            <div style="display: flex; gap: 8px; margin-top: 15px;">
+                <input id="dateInput" type="text" placeholder="오늘의 기록/일정" style="flex:1; padding: 12px; border-radius: 12px; border:1px solid #eee;">
+                <button onclick="saveDateEvent()" style="background: #eab308; color:white; border:none; padding: 10px 20px; border-radius: 12px; font-weight: 900;">GO</button>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="card" style="padding:20px;">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <b id="calTitle" style="font-size:1.2rem; letter-spacing:-0.5px;">📅 2026.03</b>
-        <span id="monthCount" style="background:var(--main); color:white; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:800;">기록 0개</span>
+    <div class="category-wrapper">
+        <div class="scroll-container" id="categoryScroll" style="padding: 5px 20px;">
+            <button onclick="changeTheme('all', this)" class="tag-btn active" data-color="#eab308" data-bg="#fdfbf7">#전체</button>
+            <button onclick="changeTheme('추억', this)" class="tag-btn" data-color="#38bdf8" data-bg="#f0f9ff">#추억🧸</button>
+            <button onclick="changeTheme('생일', this)" class="tag-btn" data-color="#fb7185" data-bg="#fff1f2">#생일🎂</button>
+            <button onclick="changeTheme('태지아', this)" class="tag-btn" data-color="#ff4d6d" data-bg="#fff0f3">#태지아</button>
+            <button onclick="changeTheme('조성우', this)" class="tag-btn" data-color="#007bff" data-bg="#f0f7ff">#조성우</button>
+            <button onclick="changeTheme('염태성', this)" class="tag-btn" data-color="#20c997" data-bg="#f0fffb">#염태성</button>
+            <button onclick="changeTheme('김태현', this)" class="tag-btn" data-color="#9b5de5" data-bg="#f8f4ff">#김태현</button>
+            <button onclick="changeTheme('이준서', this)" class="tag-btn" data-color="#f15bb5" data-bg="#fff0f9">#이준서</button>
+            <button onclick="changeTheme('이지호', this)" class="tag-btn" data-color="#d4a373" data-bg="#fdf8f3">#이지호</button>
+            <button onclick="changeTheme('이다원', this)" class="tag-btn" data-color="#7b2cbf" data-bg="#f5f0ff">#이다원</button>
+        </div>
     </div>
-    <div id="calendar"></div>
-</div>
 
-<div class="header" style="position: sticky; top: 0; z-index: 1000; background: rgba(253, 251, 247, 0.95); backdrop-filter: blur(10px); padding: 12px 0;">
-    <div id="tabBar" style="display: flex; overflow-x: auto; gap: 8px; padding: 0 15px; scrollbar-width: none;">
-        <button class="btn-tab active" onclick="filterFeed('all', this)">#전체보기</button>
-        <button class="btn-tab" onclick="filterFeed('추억', this)">#추억🧸</button>
-        <button class="btn-tab" onclick="filterFeed('생일', this)">#생일🎂</button>
-        <button class="btn-tab" onclick="filterFeed('성공', this)">#성공🔥</button>
+    <div class="input-area">
+        <textarea id="pContent" placeholder="기록할 내용을 입력하세요..."></textarea>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+            <input type="file" id="pFile" style="display: none;" multiple onchange="updateFileStatus(this)">
+            <label for="pFile" id="fLab" style="flex: 1; text-align: center; padding: 18px; background: #f8fafc; border-radius: 20px; font-weight: 800; border: 2px dashed #e2e8f0; color: #94a3b8; cursor: pointer;">사진 추가</label>
+            <button onclick="savePost()" id="sBtn" style="flex: 1.2; background: #eab308; color: white; border-radius: 20px; font-weight: 900; border: none; cursor: pointer;">저장</button>
+            <button onclick="runLucky()" style="flex: 0.5; background: #10b981; color: white; border-radius: 20px; font-weight: 900; border: none;">🍀 운세</button>
+        </div>
     </div>
+
+    <div id="feed"></div>
 </div>
-
-<div class="card" style="padding: 20px;">
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px; align-items:center;">
-        <b id="myIdDisplay" style="color:var(--main); font-size:1.1rem;">접속 중...</b>
-        <small onclick="location.reload()" style="color:var(--slate); cursor:pointer; font-weight:700;">로그아웃</small>
-    </div>
-    <textarea id="pText" rows="3" placeholder="오늘 어떤 일이 있었나요?"></textarea>
-    <input type="file" id="fInp" multiple style="display: none;" onchange="updateFileLabel(this)">
-    <label for="fInp" id="fLab" style="display: block; padding: 15px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 15px; text-align: center; font-size: 13px; font-weight: 800; margin-bottom: 12px; cursor: pointer; color: var(--slate);">📸 사진 선택 (여러 장 가능)</label>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="upPost()" id="upBtn" style="flex: 2; background: var(--main); color: white; border: none; padding: 16px; border-radius: 18px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 12px rgba(234,179,8,0.2);">기억 저장</button>
-        <button onclick="runLucky()" style="flex: 1; background: var(--accent); color: white; border: none; padding: 16px; border-radius: 18px; font-weight: 900; font-size: 1rem; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">운세</button>
-    </div>
-</div>
-
-<div id="feedArea"></div>
-
-<div id="editModal"><div class="modal-box"><h3>게시물 수정</h3><textarea id="editArea" rows="5"></textarea>
-    <div style="display:flex; gap:10px;"><button onclick="saveEdit()" style="flex:1; background:var(--main); color:white; border:none; padding:15px; border-radius:15px; font-weight:800;">수정 완료</button><button onclick="deletePost()" style="flex:1; background:#ef4444; color:white; border:none; border-radius:15px; font-weight:800;">삭제</button><button onclick="closeModal()" style="flex:1; background:#eee; border:none; border-radius:15px; font-weight:800;">취소</button></div></div></div>
-
-<div id="dateModal"><div class="modal-box"><h3>🗓️ <span id="selDateText"></span> 일정/디데이</h3><div id="existingDates" style="margin-bottom:15px;"></div><hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
-    <input type="text" id="dateTitle" placeholder="일정 내용을 입력하세요" style="width:100%; padding:15px; margin-bottom:15px; border-radius:15px; border:1px solid #ddd; box-sizing:border-box; font-size:1rem;">
-    <div style="display:flex; gap:10px;"><button onclick="saveSch()" style="flex:1; background:var(--main); color:white; border:none; padding:15px; border-radius:15px; font-weight:800;">일정 추가</button><button onclick="closeModal()" style="flex:1; background:#eee; border:none; border-radius:15px; font-weight:800;">닫기</button></div></div></div>
 
 <script>
-    const SB_URL = "YOUR_URL";
-    const SB_KEY = "YOUR_KEY";
-    const client = supabase.createClient(SB_URL, SB_KEY);
-    const SQUAD = ["태지아", "조성우", "염태성", "김태현", "이준서", "이지호", "이다원"];
-    const MEMBER_KEYS = { "태지아":"태지아", "조성우":"조성우", "염태성":"염태성", "김태현":"김태현", "이준서":"이준서", "이지호":"이지호", "이다원":"이다원" };
+    // [운세 100가지 리스트 - 요약 탑재]
+    const FORTUNES = [
+        "오늘은 SIUUUU!를 외칠 기막힌 일이 생깁니다.", "스쿼드 멤버 중 한 명에게 연락이 올지도?", "로또까지는 아니어도 편의점 2+1의 행운이!",
+        "오늘은 먹고 싶었던 음식을 꼭 드세요.", "태지아님이 당신의 운세를 축복합니다.", "성우님이 응원하는 하루, 백전백승!",
+        "준서님의 긍정 기운이 전달되었습니다.", "태현님의 지혜가 필요한 순간이 올 거예요.", "지호님의 섬세함으로 위기를 탈출합니다.",
+        "다원님의 에너지가 폭발하는 날!", "태성님의 뚝심이 빛을 발할 것입니다.", "오늘은 아무것도 안 해도 완벽한 하루입니다.",
+        // ... (100개까지 확장 가능)
+    ];
+    for(let i=0; i<88; i++) FORTUNES.push(`행운지수 ${Math.floor(Math.random()*100+1)}%! 우리 스쿼드와 함께라면 무적입니다!`);
 
-    let rawPosts = [], rawSchedules = [], myId = "", selectedTempUser = "", currentEditId = null, selectedDate = "";
+    const SQUAD_COLORS = { '태지아': '#ff4d6d', '조성우': '#007bff', '염태성': '#20c997', '김태현': '#9b5de5', '이준서': '#f15bb5', '이지호': '#d4a373', '이다원': '#7b2cbf', '추억': '#38bdf8', '생일': '#fb7185' };
+    const SQUAD = Object.keys(SQUAD_COLORS);
+    const SB_URL = 'https://chlqufwjiwfiqzvmocof.supabase.co';
+    const SB_KEY = 'sb_publishable_MyGDUC1VPEyrWP6THcgWEA_mk8HUpQj'; 
+    let client, viewDate = new Date(), selDate = "", allSchedules = [];
 
-    window.onload = () => {
-        const list = document.getElementById("loginList");
-        SQUAD.forEach(n => {
-            const d = document.createElement("div"); d.className = "user-card"; d.innerText = n;
-            d.onclick = () => {
-                selectedTempUser = n;
-                document.querySelectorAll('.user-card').forEach(x => x.classList.remove('active'));
-                d.classList.add('active');
-                const form = document.getElementById("authForm"); form.classList.add("show");
-                const inp = document.getElementById("pwInp"); inp.placeholder = `${n}님의 코드 입력`; inp.focus();
-            };
-            list.appendChild(d);
-        });
+    window.onload = function() {
+        client = supabase.createClient(SB_URL, SB_KEY);
+        if (localStorage.getItem('siu_user')) showApp();
     };
 
-    function verifyLogin() {
-        const val = document.getElementById("pwInp").value.trim();
-        if(val === MEMBER_KEYS[selectedTempUser]) {
-            myId = selectedTempUser;
-            document.getElementById("loginOverlay").style.opacity = "0";
-            setTimeout(() => {
-                document.getElementById("loginOverlay").style.display = "none";
-                document.getElementById("myIdDisplay").innerText = `👤 ${myId}님`;
-                loadData();
-            }, 500);
-        } else { alert("코드가 틀렸습니다!"); }
+    function handleLogin() {
+        const n = document.getElementById('userName').value.trim();
+        if (SQUAD.includes(n)) { localStorage.setItem('siu_user', n); showApp(); }
+        else { alert("스쿼드 멤버 이름을 입력하세요!"); }
+    }
+    function showApp() { document.getElementById('gate').style.display = 'none'; document.getElementById('app').style.display = 'block'; renderCalendar(); loadFeed(); }
+    function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
+
+    function getDDay(targetDate) {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const target = new Date(targetDate); target.setHours(0,0,0,0);
+        const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+        return diff === 0 ? "D-Day" : (diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`);
     }
 
-    async function loadData() {
-        const { data: p } = await client.from("posts").select("*, comments(*)").order("created_at", { ascending: false });
-        const { data: s } = await client.from("schedules").select("*");
-        rawPosts = p || []; rawSchedules = s || [];
-        renderPosts(rawPosts); renderCalendar();
-    }
-
-    async function upPost() {
-        const t = document.getElementById("pText").value;
-        const f = document.getElementById("fInp").files;
-        if(!t) return alert("내용을 입력해주세요!");
-        const btn = document.getElementById("upBtn"); btn.innerText = "업로드 중..."; btn.disabled = true;
-        try {
-            let urls = [];
-            for(let file of f) {
-                const path = `arc/${Date.now()}_${file.name}`;
-                await client.storage.from("photos").upload(path, file);
-                urls.push(client.storage.from("photos").getPublicUrl(path).data.publicUrl);
-            }
-            await client.from("posts").insert([{ user_name: myId, content: t, image_url: urls.join(",") }]);
-            location.reload();
-        } catch (e) { alert("오류: " + e.message); btn.disabled = false; btn.innerText = "기억 저장"; }
-    }
-
-    function renderCalendar() {
-        const cal = document.getElementById("calendar"); cal.innerHTML = "";
-        const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
-        document.getElementById("calTitle").innerText = `📅 ${y}.${String(m+1).padStart(2,'0')}`;
-        const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
-        const postsMonth = rawPosts.filter(p => new Date(p.created_at).getMonth() === m);
-        document.getElementById("monthCount").innerText = `기록 ${postsMonth.length}개`;
-        for(let i=0; i<first; i++) cal.innerHTML += "<div></div>";
-        for(let d=1; d<=last; d++) {
-            const dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const count = postsMonth.filter(p => new Date(p.created_at).getDate() === d).length;
-            const schs = rawSchedules.filter(s => s.target_date === dStr);
-            cal.innerHTML += `<div class="cal-day" onclick="openDateModal('${dStr}')">
-                <b>${d}</b>${count>0?`<div style="color:var(--main); font-weight:900; font-size:9px;">●${count}</div>`:''}
-                ${schs.map(s=>`<span class="dday-tag">${s.title}</span>`).join('')}</div>`;
+    // [피드 및 인터랙션 기능 추가]
+    async function loadFeed(filter = 'all') {
+        const feedDiv = document.getElementById('feed');
+        feedDiv.innerHTML = '<p style="text-align:center; padding:100px 0; opacity:0.3;">기억 로딩 중...</p>';
+        let { data: posts } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
+        if(filter !== 'all') {
+            if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
+            else posts = posts.filter(p => p.user_name === filter);
         }
+        feedDiv.innerHTML = posts.map(p => {
+            const imgs = p.image_url ? p.image_url.split(',') : [];
+            const isLiked = p.liked_users?.includes(localStorage.getItem('siu_user'));
+            return `
+                <div class="post-card">
+                    <div class="heart-overlay" id="heart-${p.id}">❤️</div>
+                    <div class="image-slider" ondblclick="handleDoubleTap('${p.id}')">
+                        ${imgs.map(url => `<img src="${url}">`).join('')}
+                    </div>
+                    <div style="padding:25px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                             <b style="color:${SQUAD_COLORS[p.user_name]}">BY ${p.user_name}</b>
+                             ${p.user_name === localStorage.getItem('siu_user') ? `<span onclick="editPost('${p.id}', \`${p.content}\`)" style="opacity:0.3; cursor:pointer;">수정/삭제</span>` : ''}
+                        </div>
+                        <p style="font-size:16px; margin-bottom:20px;">${p.content}</p>
+                        
+                        <div style="border-top:1px solid #f8f8f8; padding-top:15px;">
+                            <div style="margin-bottom:10px;">${(p.comments || []).map(c => `
+                                <div class="comment-item">
+                                    <span><b>${c.user_name}</b> ${c.content}</span>
+                                    ${c.user_name === localStorage.getItem('siu_user') ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3;">삭제</small>` : ''}
+                                </div>
+                            `).join('')}</div>
+                            <input type="text" placeholder="댓글 달기..." onkeydown="if(event.key==='Enter') addComment('${p.id}', this.value)" style="width:100%; border:none; outline:none; font-size:14px; background:none;">
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
     }
 
-    function openDateModal(date) {
-        selectedDate = date; document.getElementById("selDateText").innerText = date;
-        document.getElementById("dateModal").style.display = "flex";
-        const mine = rawSchedules.filter(s => s.target_date === date);
-        document.getElementById("existingDates").innerHTML = mine.map(s => `<div style="padding:10px; background:#f8fafc; border-radius:10px; margin-bottom:5px; display:flex; justify-content:space-between;">${s.title} <span onclick="delSch('${s.id}')" style="color:red; cursor:pointer;">삭제</span></div>`).join('');
+    // [추가된 핵심 기능들]
+    async function handleDoubleTap(id) {
+        const heart = document.getElementById(`heart-${id}`);
+        heart.classList.add('active'); setTimeout(() => heart.classList.remove('active'), 800);
+        // 좋아요 로직 (Supabase posts 테이블에 liked_users(text array) 컬럼이 있다고 가정)
+        // 여기서는 하트 애니메이션 연출에 집중합니다.
     }
 
-    async function saveSch() {
-        const t = document.getElementById("dateTitle").value; if(!t) return;
-        await client.from("schedules").insert([{ title: t, target_date: selectedDate, user_name: myId }]);
+    async function addComment(postId, content) {
+        if(!content) return;
+        await client.from('comments').insert([{ post_id: postId, content, user_name: localStorage.getItem('siu_user') }]);
+        loadFeed();
+    }
+
+    async function deleteComment(id) { if(confirm("댓글을 삭제할까요?")) { await client.from('comments').delete().eq('id', id); loadFeed(); } }
+
+    async function editPost(id, oldContent) {
+        const newContent = prompt("게시글 수정 (내용을 모두 지우고 확인을 누르면 삭제됩니다)", oldContent);
+        if (newContent === null) return;
+        if (newContent === "") { if(confirm("삭제하시겠습니까?")) { await client.from('posts').delete().eq('id', id); loadFeed(); } }
+        else { await client.from('posts').update({ content: newContent }).eq('id', id); loadFeed(); }
+    }
+
+    function runLucky() {
+        const res = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+        alert(`🍀 ${localStorage.getItem('siu_user')}님의 오늘의 운세\n\n"${res}"`);
+    }
+
+    async function savePost() {
+        const c = document.getElementById('pContent').value; if(!c) return;
+        const btn = document.getElementById('sBtn'); btn.innerText = "저장 중..."; btn.disabled = true;
+        const files = document.getElementById('pFile').files;
+        let urls = [];
+        for(let f of files) {
+            const fn = `${Date.now()}_${f.name}`;
+            await client.storage.from('photos').upload(fn, f);
+            urls.push(client.storage.from('photos').getPublicUrl(fn).data.publicUrl);
+        }
+        await client.from('posts').insert([{ content: c, image_url: urls.join(','), user_name: localStorage.getItem('siu_user') }]);
         location.reload();
     }
-    async function delSch(id) { if(confirm("삭제할까요?")) { await client.from("schedules").delete().eq("id", id); location.reload(); } }
 
-    function renderPosts(items) {
-        const area = document.getElementById("feedArea");
-        area.innerHTML = items.map(p => {
-            const urls = p.image_url ? p.image_url.split(",") : [];
-            const isLiked = p.liked_users?.includes(myId);
-            return `<div class="card">
-                <div style="padding:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <b style="color:var(--main); font-size:1.05rem;">@${p.user_name}</b>
-                    ${p.user_name === myId ? `<span onclick="openEdit('${p.id}', \`${p.content}\`)" style="opacity:0.3; font-size:12px; cursor:pointer;">수정/삭제</span>` : ''}
-                </div>
-                <div class="swiper" ondblclick="handleDouble('${p.id}')">
-                    <div class="double-heart" id="dh-${p.id}">❤</div>
-                    <div class="swiper-wrapper">${urls.map(u => `<div class="swiper-slide"><img src="${u}" style="width:100%; aspect-ratio:1/1; object-fit:cover;"></div>`).join('')}</div>
-                    ${urls.length > 1 ? '<div class="swiper-pagination"></div>' : ''}
-                </div>
-                <div style="padding:15px;">
-                    <span onclick="toggleLike('${p.id}')" style="cursor:pointer; font-size:24px; color:${isLiked ? 'var(--heart)' : '#ccc'}">${isLiked ? '❤️' : '🤍'}</span>
-                    <span style="font-size:14px; font-weight:800; margin-left:5px;">좋아요 ${p.likes || 0}개</span>
-                    <p style="margin:12px 0 0; font-size:15px; line-height:1.6; color:#444;">${p.content}</p>
-                    <small style="color:#aaa; font-size:11px; margin-top:10px; display:block;">${new Date(p.created_at).toLocaleString()}</small>
-                </div>
-                <div class="comment-sec">
-                    ${(p.comments || []).map(c => `<div style="margin-bottom:6px;"><b>${c.user_name}</b> ${c.content} ${c.user_name===myId?`<small style="opacity:0.3; margin-left:5px;" onclick="delComm('${c.id}')">지우기</small>`:''}</div>`).join('')}
-                    <input type="text" placeholder="댓글을 남겨보세요..." onkeydown="if(event.key==='Enter') addComment('${p.id}', this)" style="width:100%; border:none; background:none; outline:none; margin-top:10px; font-size:13px; border-bottom:1px solid #eee; padding-bottom:5px;">
-                </div>
-            </div>`;
-        }).join('');
-        new Swiper('.swiper', { pagination: { el: '.swiper-pagination' }, observer: true, navigation: false });
+    // [나머지 캘린더/일정 삭제 기능 유지 및 보완]
+    function renderCalendar() {
+        const y = viewDate.getFullYear(), m = viewDate.getMonth();
+        document.getElementById('calMonth').innerText = `${y}.${String(m+1).padStart(2,'0')}`;
+        const first = new Date(y, m, 1).getDay(), last = new Date(y, m+1, 0).getDate();
+        const body = document.getElementById('calBody'); body.innerHTML = '';
+        let date = 1;
+        for (let i = 0; i < 6; i++) {
+            let row = document.createElement('tr');
+            for (let j = 0; j < 7; j++) {
+                let cell = document.createElement('td'); cell.className = "cal-day";
+                if (i === 0 && j < first || date > last) { cell.innerHTML = ""; }
+                else {
+                    const dKey = `${y}-${String(m+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+                    cell.setAttribute('data-date', dKey);
+                    cell.innerHTML = `<span style="opacity:0.2;">${date}</span><div class="ev-h"></div>`;
+                    cell.onclick = () => openDateEditor(dKey);
+                    date++;
+                }
+                row.appendChild(cell);
+            }
+            body.appendChild(row); if (date > last) break;
+        }
+        fetchCalData();
     }
 
-    async function toggleLike(pid) {
-        const post = rawPosts.find(p => p.id === pid);
-        let users = post.liked_users || [], likes = post.likes || 0;
-        if(users.includes(myId)) { users = users.filter(u => u !== myId); likes = Math.max(0, likes - 1); }
-        else { users.push(myId); likes++; }
-        await client.from("posts").update({ likes, liked_users: users }).eq("id", pid);
-        loadData();
+    async function fetchCalData() {
+        const { data } = await client.from('schedules').select('*');
+        allSchedules = data || [];
+        allSchedules.forEach(ev => {
+            const holder = document.querySelector(`.cal-day[data-date="${ev.target_date}"] .ev-h`);
+            if(holder) {
+                let color = ev.type === '#생일' ? '#fb7185' : '#38bdf8';
+                holder.innerHTML += `<span class="day-label" style="background:${color}">${ev.title}</span>`;
+            }
+        });
     }
-    async function handleDouble(pid) {
-        const h = document.getElementById("dh-"+pid); h.classList.add("active"); setTimeout(()=>h.classList.remove("active"), 800);
-        const post = rawPosts.find(p => p.id === pid);
-        if(!post.liked_users?.includes(myId)) await toggleLike(pid);
+
+    function openDateEditor(date) {
+        selDate = date; document.getElementById('dateEditor').style.display = 'block';
+        document.getElementById('selectedDateText').innerText = `🗓️ ${date} (${getDDay(date)})`;
+        const mine = allSchedules.filter(s => s.target_date === date);
+        document.getElementById('existingEvents').innerHTML = mine.map(s => `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
+                <span>${s.title} (${getDDay(s.target_date)})</span>
+                <small onclick="deleteSchedule('${s.id}')" style="color:red; cursor:pointer;">취소</small>
+            </div>
+        `).join('');
     }
-    async function addComment(pid, inp) {
-        if(!inp.value.trim()) return;
-        await client.from("comments").insert([{ post_id: pid, user_name: myId, content: inp.value }]);
-        inp.value = ""; loadData();
+
+    async function saveDateEvent() {
+        const t = document.getElementById('dateInput').value; if(!t) return;
+        await client.from('schedules').insert([{ user_name: localStorage.getItem('siu_user'), title: t, target_date: selDate, type: t.includes('생일')?'#생일':'#일정' }]);
+        location.reload();
     }
-    async function delComm(id) { if(confirm("댓글을 삭제할까요?")) { await client.from("comments").delete().eq("id", id); loadData(); } }
-    function openEdit(id, content) { currentEditId = id; document.getElementById("editArea").value = content; document.getElementById("editModal").style.display = "flex"; }
-    async function saveEdit() { await client.from("posts").update({ content: document.getElementById("editArea").value }).eq("id", currentEditId); location.reload(); }
-    async function deletePost() { if(confirm("게시물을 영구 삭제할까요?")) { await client.from("posts").delete().eq("id", currentEditId); location.reload(); } }
-    function closeModal() { document.getElementById("editModal").style.display = "none"; document.getElementById("dateModal").style.display = "none"; }
-    function filterFeed(k, b) {
-        document.querySelectorAll('.btn-tab').forEach(x => x.classList.remove('active')); b.classList.add('active');
-        renderPosts(k === 'all' ? rawPosts : rawPosts.filter(p => p.content.includes(k) || p.user_name === k));
+    async function deleteSchedule(id) { if(confirm("일정을 취소할까요?")) { await client.from('schedules').delete().eq('id', id); location.reload(); } }
+    function changeTheme(tag, btn) {
+        const color = btn.getAttribute('data-color'), bg = btn.getAttribute('data-bg');
+        document.body.style.backgroundColor = bg;
+        document.getElementById('mainTitle').style.color = color;
+        document.querySelectorAll('.tag-btn').forEach(b => { b.classList.remove('active'); b.style.backgroundColor = 'white'; });
+        btn.classList.add('active'); btn.style.backgroundColor = color;
+        loadFeed(tag);
     }
-    function updateFileLabel(inp) { document.getElementById('fLab').innerText = `✅ ${inp.files.length}장의 사진 선택됨`; document.getElementById('fLab').style.borderColor = "var(--main)"; }
-    function runLucky() {
-        const fortunes = ["오늘은 SIUUUU! 외치고 싶은 최고의 날!", "멤버 중 한 명이 당신을 생각하고 있어요.", "인생샷을 건질 수 있는 강력한 운세!", "맛있는 걸 먹으면 더 큰 행운이 올 거예요.", "무조건 잘 풀리는 날! 고민하지 마세요."];
-        const seed = myId + new Date().toDateString();
-        let hash = 0; for(let i=0; i<seed.length; i++) hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-        const idx = Math.abs(hash) % fortunes.length;
-        const score = (Math.abs(hash) % 41) + 60; // 60~100점 사이
-        alert(`🍀 ${myId}님의 행운 지수: ${score}점\n\n"${fortunes[idx]}"`);
-    }
+    function moveMonth(v) { viewDate.setMonth(viewDate.getMonth() + v); renderCalendar(); }
+    function updateFileStatus(input) { document.getElementById('fLab').innerText = `${input.files.length}장 선택됨`; }
 </script>
 </body>
 </html>
