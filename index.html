@@ -13,7 +13,7 @@
         .scroll-container::-webkit-scrollbar { display: none; }
         .post-card { background: white; border-radius: 35px; margin: 0 15px 30px; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.04); overflow: hidden; }
         .image-slider { display: flex; overflow-x: auto; snap-type: x mandatory; background: #f1f5f9; scrollbar-width: none; }
-        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; }
+        .image-slider img { flex: 0 0 100%; width: 100%; max-height: 500px; object-fit: cover; snap-align: start; cursor: pointer; }
         .cal-day { height: 100px; vertical-align: top; padding: 8px; border: 0.5px solid rgba(0,0,0,0.05); cursor: pointer; background: #fff; position: relative; }
         .ev-h { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; overflow-y: auto; max-height: 70px; scrollbar-width: none; }
         .day-label { font-size: 10px; padding: 4px 6px; border-radius: 6px; color: white !important; display: block; font-weight: 800; text-align: center; white-space: nowrap; overflow: hidden; }
@@ -22,7 +22,7 @@
         .tag-btn { flex: 0 0 auto; padding: 12px 28px; border-radius: 50px; background: white; border: 2px solid rgba(0,0,0,0.05); font-size: 14px; font-weight: 800; cursor: pointer; }
         .tag-btn.active { color: white !important; transform: scale(1.05); }
         .comment-item { font-size: 13px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .comment-gif { display: block; max-width: 150px; border-radius: 10px; margin-top: 5px; }
+        .comment-gif { display: block; max-width: 150px; border-radius: 10px; margin-top: 5px; cursor: pointer; }
         .post-manage-btns { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 10; }
         .m-btn { background: rgba(255,255,255,0.8); border: none; padding: 5px 10px; border-radius: 10px; font-size: 11px; cursor: pointer; font-weight: bold; color: #666; }
         .like-badge { cursor: pointer; display: inline-flex; align-items: center; gap: 5px; background: #fff0f3; color: #ff4d6d; padding: 5px 12px; border-radius: 15px; font-size: 13px; font-weight: 800; border: none; transition: 0.2s; }
@@ -40,6 +40,12 @@
 
 <div id="bDayBanner"></div>
 
+<!-- 사진 크게 보기 모달 -->
+<div id="lightbox" onclick="closeLightbox()" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.9); justify-content:center; align-items:center; cursor:pointer;">
+    <span style="position:absolute; top:20px; right:25px; color:white; font-size:30px; font-weight:bold;">✕</span>
+    <img id="lightboxImg" src="" style="max-width:90%; max-height:85vh; border-radius:15px; object-fit:contain;">
+</div>
+
 <div id="gate" style="display: flex; position: fixed; inset: 0; z-index: 9999; background: #fdfbf7; flex-direction: column; align-items: center; justify-content: center;">
     <h1 style="font-size: 5rem; font-weight: 900; color: #eab308; font-style: italic;">SIUUUU!</h1>
     <div style="width: 300px; margin-top: 30px;">
@@ -54,6 +60,7 @@
         <button onclick="handleLogout()" style="opacity: 0.4; border: 1px solid #ccc; padding: 8px 15px; border-radius: 12px; background: none; cursor: pointer;">EXIT</button>
     </header>
 
+    <!-- 캘린더 및 D-Day 카드 -->
     <div class="post-card" style="padding: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h2 id="calMonth" style="margin: 0; font-weight: 900; font-size: 1.5rem;"></h2>
@@ -84,7 +91,21 @@
         </div>
     </div>
 
-    <div class="category-wrapper" style="position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 10px 0;">
+    <!-- 신규 기능: 이번 달 스쿼드 랭킹 / 통계 -->
+    <div class="post-card" style="padding: 20px; margin-bottom: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleLeaderboard()">
+            <h3 style="margin:0; font-weight:900; font-size:1.1rem; color:#eab308;">🏆 이번 달 스쿼드 랭킹</h3>
+            <span id="lbToggleIcon" style="font-size:12px; color:#888; font-weight:bold;">▼ 열기</span>
+        </div>
+        <div id="leaderboardContent" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:12px;"></div>
+    </div>
+
+    <!-- 신규 기능: 게시글 키워드 검색창 -->
+    <div style="margin: 0 15px 12px;">
+        <input id="searchInput" type="text" placeholder="🔍 키워드 또는 작성자 이름 검색..." oninput="handleSearch()" style="width:100%; padding:15px 22px; border-radius:50px; border:2px solid rgba(0,0,0,0.05); outline:none; font-size:14px; background:white; box-sizing:border-box; box-shadow: 0 5px 15px rgba(0,0,0,0.02);">
+    </div>
+
+    <div class="category-wrapper" style="position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 5px 0 10px;">
         <div class="scroll-container" id="categoryScroll">
             <button onclick="changeTheme('all', this)" class="tag-btn active" data-color="#eab308" data-bg="#fdfbf7">#전체</button>
             <button onclick="changeTheme('추억', this)" class="tag-btn" data-color="#38bdf8" data-bg="#f0f9ff">#추억🧸</button>
@@ -109,6 +130,9 @@
         </div>
     </div>
 
+    <!-- 신규 기능: N년 전 오늘 추억 소환 영역 -->
+    <div id="onThisDayBox" style="margin: 0 15px 20px; display:none;"></div>
+
     <div id="feed"></div>
 </div>
 
@@ -124,6 +148,7 @@
     };
 
     let client, viewDate = new Date(), selDate = "", allSchedules = [];
+    let currentTag = 'all', currentSearchQuery = '';
 
     window.onload = function() { 
         client = supabase.createClient(SB_URL, SB_KEY); 
@@ -148,6 +173,119 @@
     }
     
     function handleLogout() { localStorage.removeItem('siu_user'); location.reload(); }
+
+    /* Lightbox 함수 */
+    function openLightbox(url) {
+        document.getElementById('lightboxImg').src = url;
+        document.getElementById('lightbox').style.display = 'flex';
+    }
+    function closeLightbox() {
+        document.getElementById('lightbox').style.display = 'none';
+    }
+
+    /* 검색 처리 함수 */
+    function handleSearch() {
+        currentSearchQuery = document.getElementById('searchInput').value.trim();
+        loadFeed(currentTag);
+    }
+
+    /* 랭킹 접기/열기 */
+    function toggleLeaderboard() {
+        const content = document.getElementById('leaderboardContent');
+        const icon = document.getElementById('lbToggleIcon');
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            icon.innerText = '▲ 접기';
+        } else {
+            content.style.display = 'none';
+            icon.innerText = '▼ 열기';
+        }
+    }
+
+    /* 이번 달 스쿼드 랭킹 계산 */
+    function renderLeaderboard(posts) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        const thisMonthPosts = posts.filter(p => {
+            if(!p.created_at) return false;
+            const d = new Date(p.created_at);
+            return d.getFullYear() === year && d.getMonth() === month;
+        });
+
+        const postCounts = {}, likeCounts = {}, commentCounts = {};
+        SQUAD.forEach(m => { postCounts[m] = 0; likeCounts[m] = 0; commentCounts[m] = 0; });
+
+        thisMonthPosts.forEach(p => {
+            if(postCounts[p.user_name] !== undefined) postCounts[p.user_name]++;
+            if(likeCounts[p.user_name] !== undefined) likeCounts[p.user_name] += (p.likes || 0);
+
+            (p.comments || []).forEach(c => {
+                const cd = c.created_at ? new Date(c.created_at) : now;
+                if(cd.getFullYear() === year && cd.getMonth() === month) {
+                    if(commentCounts[c.user_name] !== undefined) commentCounts[c.user_name]++;
+                }
+            });
+        });
+
+        const getTopUser = (obj) => {
+            let topUser = '-', maxVal = 0;
+            Object.entries(obj).forEach(([user, val]) => {
+                if (val > maxVal) { maxVal = val; topUser = user; }
+            });
+            return maxVal > 0 ? `${topUser} (${maxVal}회)` : '아직 없음';
+        };
+
+        const content = document.getElementById('leaderboardContent');
+        content.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; font-size: 12px;">
+                <div style="background: #f8fafc; padding: 12px 5px; border-radius: 15px;">
+                    <div style="font-size: 18px; margin-bottom: 4px;">✍️</div>
+                    <div style="font-weight: 800; color: #64748b;">기록왕</div>
+                    <div style="font-weight: 900; color: #eab308; margin-top: 4px;">${getTopUser(postCounts)}</div>
+                </div>
+                <div style="background: #f8fafc; padding: 12px 5px; border-radius: 15px;">
+                    <div style="font-size: 18px; margin-bottom: 4px;">👑</div>
+                    <div style="font-weight: 800; color: #64748b;">인싸왕</div>
+                    <div style="font-weight: 900; color: #fb7185; margin-top: 4px;">${getTopUser(likeCounts)}</div>
+                </div>
+                <div style="background: #f8fafc; padding: 12px 5px; border-radius: 15px;">
+                    <div style="font-size: 18px; margin-bottom: 4px;">💬</div>
+                    <div style="font-weight: 800; color: #64748b;">소통왕</div>
+                    <div style="font-weight: 900; color: #10b981; margin-top: 4px;">${getTopUser(commentCounts)}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    /* N년 전 오늘 추억 소환 계산 */
+    function renderOnThisDay(posts) {
+        const today = new Date();
+        const curYear = today.getFullYear();
+        const m = today.getMonth() + 1;
+        const d = today.getDate();
+
+        const matches = posts.filter(p => {
+            if (!p.created_at) return false;
+            const pDate = new Date(p.created_at);
+            return pDate.getFullYear() < curYear && (pDate.getMonth() + 1) === m && pDate.getDate() === d;
+        });
+
+        const box = document.getElementById('onThisDayBox');
+        if (matches.length === 0) { box.style.display = 'none'; return; }
+
+        box.style.display = 'block';
+        box.innerHTML = matches.map(p => {
+            const diffYears = curYear - new Date(p.created_at).getFullYear();
+            return `
+            <div style="background: linear-gradient(135deg, #e0f2fe, #fef3c7); padding: 18px 22px; border-radius: 25px; border: 1px solid #bae6fd; box-shadow: 0 10px 20px rgba(0,0,0,0.03);">
+                <div style="font-weight: 900; font-size: 13px; color: #0284c7; margin-bottom: 6px;">💡 ${diffYears}년 전 오늘의 추억 소환!</div>
+                <div style="font-size: 14px; color: #334155; line-height: 1.5; font-weight: 600;">"${p.content}"</div>
+                <div style="font-size: 11px; color: #0369a1; margin-top: 8px; text-align: right; font-weight: 800;">BY ${p.user_name}</div>
+            </div>`;
+        }).join('');
+    }
 
     function checkTodayBirthday() {
         const today = new Date();
@@ -230,42 +368,48 @@
         const currentUser = localStorage.getItem('siu_user') || '익명';
         const { error } = await client.from('schedules').insert([{ user_name: currentUser, title: t, target_date: selDate }]);
         
-        if (error) {
-            alert("일정 저장 실패: " + error.message);
-            console.error(error);
-            return;
-        }
+        if (error) { alert("일정 저장 실패: " + error.message); return; }
         
         input.value = "";
         await renderCalendar();
-        openDateEditor(selDate); // 편집 창 정보 즉시 업데이트
+        openDateEditor(selDate);
     }
 
     async function deleteSchedule(id) {
         if(confirm("이 일정을 삭제할까요?")) {
             const { error } = await client.from('schedules').delete().eq('id', id);
-            if (error) {
-                alert("일정 삭제 실패: " + error.message);
-                return;
-            }
+            if (error) { alert("일정 삭제 실패: " + error.message); return; }
             await renderCalendar();
-            openDateEditor(selDate); // 편집 창 정보 즉시 업데이트
+            openDateEditor(selDate);
         }
     }
 
-    async function loadFeed(filter = 'all') {
+    async function loadFeed(filter = currentTag) {
+        currentTag = filter;
         const feedDiv = document.getElementById('feed');
         const currentUser = localStorage.getItem('siu_user');
         let { data: posts, error } = await client.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
         if (error) { console.error("피드 불러오기 에러:", error); return; }
         posts = posts || [];
-        if(filter !== 'all') {
-            if(['추억','생일'].includes(filter)) posts = posts.filter(p => p.content.includes(filter));
-            else posts = posts.filter(p => p.user_name === filter);
+        
+        renderLeaderboard(posts);
+        renderOnThisDay(posts);
+
+        let filtered = posts;
+        if(currentTag !== 'all') {
+            if(['추억','생일'].includes(currentTag)) filtered = filtered.filter(p => p.content.includes(currentTag));
+            else filtered = filtered.filter(p => p.user_name === currentTag);
+        }
+
+        if(currentSearchQuery) {
+            const q = currentSearchQuery.toLowerCase();
+            filtered = filtered.filter(p => p.content.toLowerCase().includes(q) || p.user_name.toLowerCase().includes(q));
         }
         
-        feedDiv.innerHTML = posts.map(p => {
+        feedDiv.innerHTML = filtered.map(p => {
             const isGif = (c) => c.content.match(/\.(gif|webp)$|giphy|tenor/i);
+            const imagesHtml = (p.image_url||'').split(',').filter(u=>u).map(u => `<img src="${u}" onclick="openLightbox('${u}')">`).join('');
+
             return `
             <div class="post-card">
                 ${p.user_name === currentUser ? `
@@ -274,7 +418,7 @@
                         <button class="m-btn" onclick="deletePost('${p.id}')">삭제</button>
                     </div>
                 ` : ''}
-                <div class="image-slider">${(p.image_url||'').split(',').filter(u=>u).map(u => `<img src="${u}">`).join('')}</div>
+                <div class="image-slider">${imagesHtml}</div>
                 <div style="padding:25px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <b style="color:${SQUAD_COLORS[p.user_name] || '#444'}">BY ${p.user_name}</b>
@@ -284,7 +428,7 @@
                     <div id="comments-${p.id}" style="border-top:1px solid #eee; padding-top:15px;">
                         ${(p.comments || []).map(c => `
                             <div class="comment-item">
-                                <span><b>${c.user_name}</b> ${isGif(c) ? `<img class="comment-gif" src="${c.content}">` : c.content}</span>
+                                <span><b>${c.user_name}</b> ${isGif(c) ? `<img class="comment-gif" src="${c.content}" onclick="openLightbox('${c.content}')">` : c.content}</span>
                                 ${c.user_name === currentUser ? `<small onclick="deleteComment('${c.id}')" style="opacity:0.3; cursor:pointer;">✕</small>` : ''}
                             </div>`).join('')}
                     </div>
@@ -295,7 +439,7 @@
                     </div>
                 </div>
             </div>`;
-        }).join('');
+        }).join('') || `<p style="text-align:center; color:#aaa; margin:40px 0; font-size:14px;">검색 결과나 기록이 없습니다. 😅</p>`;
     }
 
     async function addLike(id, currentLikes) {
@@ -330,7 +474,6 @@
         try {
             let urls = [];
             for(let file of f) {
-                // 한글 및 특수문자 파일명 깨짐 방지용 식별자 생성
                 const fileExt = file.name.split('.').pop();
                 const cleanFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
                 
@@ -367,10 +510,8 @@
     async function deletePost(id) {
         if (!confirm("정말 이 기록과 사진을 모두 지울까요?")) return;
         try {
-            // 1. 해당 게시글에 작성된 댓글 먼저 삭제 (외래키 제약조건 오류 방지)
             await client.from('comments').delete().eq('post_id', id);
 
-            // 2. 스토리지 내 첨부 이미지 삭제
             const { data: post } = await client.from('posts').select('image_url').eq('id', id).single();
             if (post && post.image_url) {
                 const urls = post.image_url.split(',').filter(u => u); 
@@ -378,7 +519,6 @@
                 if (fileNames.length > 0) await client.storage.from('photos').remove(fileNames);
             }
 
-            // 3. 게시글 최종 삭제
             const { error } = await client.from('posts').delete().eq('id', id);
             if (error) throw error;
 
